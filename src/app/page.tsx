@@ -1,103 +1,174 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useCallback } from "react";
+import { ReactFlowProvider } from "reactflow";
+import { WorkflowCanvas } from "@/components/WorkflowCanvas";
+import { NodePalette } from "@/components/NodePalette";
+import { ConfigPanel } from "@/components/ConfigPanel";
+import { Toolbar } from "@/components/Toolbar";
+import { LogPanel } from "@/components/LogPanel";
+import { useWorkflowStore } from "@/store/workflowStore";
+import { exportWorkflow } from "@/lib/workflow-io";
+import {
+  WorkflowExecutionStatus,
+  NodeExecutionState,
+  ExecutionLog,
+} from "@/types/workflow";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    nodes,
+    edges,
+    setExecutionStatus,
+    setNodeExecutionState,
+    addLog,
+    clearLogs,
+    updateNodeData,
+  } = useWorkflowStore();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  const handleExecute = useCallback(async () => {
+    if (nodes.length === 0) {
+      alert("Add some nodes first!");
+      return;
+    }
+
+    setIsExecuting(true);
+    setExecutionStatus(WorkflowExecutionStatus.RUNNING);
+    clearLogs();
+
+    // Reset all node states
+    nodes.forEach((node) => {
+      setNodeExecutionState(node.id, NodeExecutionState.IDLE);
+      updateNodeData(node.id, { output: undefined });
+    });
+
+    const workflow = exportWorkflow(nodes, edges);
+    const controller = new AbortController();
+    setAbortController(controller);
+
+    try {
+      const response = await fetch("/api/workflow/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(workflow),
+        signal: controller.signal,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setExecutionStatus(WorkflowExecutionStatus.COMPLETED);
+        
+        // Update node outputs and states
+        Object.entries(result.results).forEach(([nodeId, nodeResult]: [string, any]) => {
+          if (nodeResult.success) {
+            setNodeExecutionState(nodeId, NodeExecutionState.SUCCESS);
+            updateNodeData(nodeId, { output: nodeResult.output });
+          } else {
+            setNodeExecutionState(nodeId, NodeExecutionState.ERROR);
+          }
+        });
+
+        // Add logs
+        if (result.logs && Array.isArray(result.logs)) {
+          result.logs.forEach((log: ExecutionLog) => addLog(log));
+        }
+
+        addLog({
+          id: `final-${Date.now()}`,
+          timestamp: Date.now(),
+          level: "success",
+          message: "✨ Workflow completed successfully!",
+        });
+      } else {
+        setExecutionStatus(WorkflowExecutionStatus.ERROR);
+        
+        // Add error logs
+        if (result.logs && Array.isArray(result.logs)) {
+          result.logs.forEach((log: ExecutionLog) => addLog(log));
+        }
+
+        addLog({
+          id: `error-${Date.now()}`,
+          timestamp: Date.now(),
+          level: "error",
+          message: `Workflow failed: ${result.error || "Unknown error"}`,
+        });
+
+        // Show validation errors if present
+        if (result.validationErrors && Array.isArray(result.validationErrors)) {
+          result.validationErrors.forEach((error: any) => {
+            addLog({
+              id: `validation-${Date.now()}-${Math.random()}`,
+              timestamp: Date.now(),
+              level: "error",
+              message: `Validation: ${error.message}`,
+              nodeId: error.nodeId,
+            });
+          });
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        setExecutionStatus(WorkflowExecutionStatus.CANCELLED);
+        addLog({
+          id: `cancelled-${Date.now()}`,
+          timestamp: Date.now(),
+          level: "warning",
+          message: "Workflow execution cancelled by user",
+        });
+      } else {
+        setExecutionStatus(WorkflowExecutionStatus.ERROR);
+        addLog({
+          id: `error-${Date.now()}`,
+          timestamp: Date.now(),
+          level: "error",
+          message: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+        });
+      }
+    } finally {
+      setIsExecuting(false);
+      setAbortController(null);
+    }
+  }, [nodes, edges, setExecutionStatus, setNodeExecutionState, addLog, clearLogs, updateNodeData]);
+
+  const handleStop = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      addLog({
+        id: `stop-${Date.now()}`,
+        timestamp: Date.now(),
+        level: "warning",
+        message: "Stopping workflow...",
+      });
+    }
+  }, [abortController, addLog]);
+
+  return (
+    <ReactFlowProvider>
+      <div className="h-screen w-screen flex flex-col overflow-hidden">
+        <Toolbar
+          onExecute={handleExecute}
+          onStop={handleStop}
+          isExecuting={isExecuting}
+        />
+
+        <div className="flex-1 flex overflow-hidden">
+          <NodePalette />
+          
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-hidden">
+              <WorkflowCanvas />
+            </div>
+            <LogPanel />
+          </div>
+
+          <ConfigPanel />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </ReactFlowProvider>
   );
 }

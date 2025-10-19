@@ -1,0 +1,59 @@
+{
+  "id": "workflow-example-003",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "Article Text",
+        "payload": "OpenAI released GPT-4 in March 2023. The model was trained by the OpenAI team in San Francisco. It can handle up to 128,000 tokens and costs $0.03 per 1K tokens. Contact: support@openai.com"
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "structured_output-1",
+      "type": "structured_output",
+      "data": {
+        "label": "Extract Key Info",
+        "schema": "{\n  \"company\": \"string\",\n  \"product\": \"string\",\n  \"release_date\": \"string\",\n  \"location\": \"string\",\n  \"pricing\": \"string\",\n  \"contact_email\": \"string\"\n}",
+        "model": "openai/gpt-3.5-turbo"
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Structured Data"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "structured_output-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "structured_output-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Structured Data Extraction",
+    "description": "Extracts structured information from text using a JSON schema",
+    "created_at": "2025-10-18T00:00:00Z"
+  }
+}
+

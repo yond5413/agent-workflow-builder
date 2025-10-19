@@ -1,0 +1,62 @@
+{
+  "id": "workflow-example-002",
+  "nodes": [
+    {
+      "id": "web_scraper-0",
+      "type": "web_scraper",
+      "data": {
+        "label": "Scrape Website",
+        "url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+        "max_length": 3000
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "llm_task-1",
+      "type": "llm_task",
+      "data": {
+        "label": "Summarize Content",
+        "prompt": "Please provide a concise summary of the following content in 3-4 sentences:\n\n{{input}}",
+        "model": "openai/gpt-3.5-turbo",
+        "temperature": 0.5,
+        "max_tokens": 200
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Summary Output"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "web_scraper-0",
+      "target": "llm_task-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "llm_task-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Web Scraper + Summarizer",
+    "description": "Scrapes a webpage and generates a summary using an LLM",
+    "created_at": "2025-10-18T00:00:00Z"
+  }
+}
+

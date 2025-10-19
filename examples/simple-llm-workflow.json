@@ -1,0 +1,61 @@
+{
+  "id": "workflow-example-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "User Input",
+        "payload": "Tell me a fun fact about artificial intelligence"
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "llm_task-1",
+      "type": "llm_task",
+      "data": {
+        "label": "Generate Response",
+        "prompt": "{{input}}",
+        "model": "openai/gpt-3.5-turbo",
+        "temperature": 0.7,
+        "max_tokens": 500
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Final Output"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "llm_task-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "llm_task-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Simple LLM Workflow",
+    "description": "A basic workflow that takes input and generates a response using an LLM",
+    "created_at": "2025-10-18T00:00:00Z"
+  }
+}
+
