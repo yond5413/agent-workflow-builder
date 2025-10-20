@@ -4,6 +4,8 @@ export enum NodeType {
   LLM_TASK = "llm_task",
   WEB_SCRAPER = "web_scraper",
   STRUCTURED_OUTPUT = "structured_output",
+  EMBEDDING_GENERATOR = "embedding_generator",
+  SIMILARITY_SEARCH = "similarity_search",
   OUTPUT = "output",
 }
 
@@ -58,11 +60,30 @@ export interface OutputNodeData {
   output?: any;
 }
 
+export interface EmbeddingGeneratorNodeData {
+  label?: string;
+  model?: string;
+  inputType?: "search_document" | "search_query" | "classification" | "clustering";
+  text?: string; // Optional custom text input
+  output?: any;
+}
+
+export interface SimilaritySearchNodeData {
+  label?: string;
+  collectionName?: string;
+  topK?: number;
+  scoreThreshold?: number;
+  queryText?: string; // Optional text query (will be auto-embedded)
+  output?: any;
+}
+
 export type NodeData =
   | InputNodeData
   | LLMTaskNodeData
   | WebScraperNodeData
   | StructuredOutputNodeData
+  | EmbeddingGeneratorNodeData
+  | SimilaritySearchNodeData
   | OutputNodeData;
 
 // Workflow Node

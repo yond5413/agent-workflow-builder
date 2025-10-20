@@ -175,6 +175,113 @@ export function ConfigPanel() {
           </>
         )}
 
+        {selectedNode.type === NodeType.EMBEDDING_GENERATOR && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Model</label>
+              <select
+                value={selectedNode.data.model || "embed-english-v3.0"}
+                onChange={(e) => handleDataChange("model", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="embed-english-v3.0">Embed English v3.0</option>
+                <option value="embed-multilingual-v3.0">Embed Multilingual v3.0</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Input Type</label>
+              <select
+                value={selectedNode.data.inputType || "search_document"}
+                onChange={(e) => handleDataChange("inputType", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="search_document">Search Document</option>
+                <option value="search_query">Search Query</option>
+                <option value="classification">Classification</option>
+                <option value="clustering">Clustering</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Custom Text (Optional)</label>
+              <textarea
+                value={selectedNode.data.text || ""}
+                onChange={(e) => handleDataChange("text", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                rows={4}
+                placeholder="Leave empty to use input from connected nodes..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                If provided, this text will be used instead of input from previous nodes.
+              </p>
+            </div>
+          </>
+        )}
+
+        {selectedNode.type === NodeType.SIMILARITY_SEARCH && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Collection Name</label>
+              <input
+                type="text"
+                value={selectedNode.data.collectionName || ""}
+                onChange={(e) => handleDataChange("collectionName", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="my_collection"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Name of the Qdrant collection to search in.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Top K: {selectedNode.data.topK || 5}
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                step="1"
+                value={selectedNode.data.topK || 5}
+                onChange={(e) => handleDataChange("topK", parseInt(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Number of similar results to return (1-20).
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Score Threshold: {selectedNode.data.scoreThreshold || 0.7}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={selectedNode.data.scoreThreshold || 0.7}
+                onChange={(e) => handleDataChange("scoreThreshold", parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum similarity score (0-1). Only results above this threshold will be returned.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Query Text (Optional)</label>
+              <textarea
+                value={selectedNode.data.queryText || ""}
+                onChange={(e) => handleDataChange("queryText", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                rows={3}
+                placeholder="Leave empty to use vector from connected nodes..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Text query to search for. Will be automatically embedded if provided.
+              </p>
+            </div>
+          </>
+        )}
+
         {selectedNode.type === NodeType.OUTPUT && (
           <div className="text-sm text-gray-600">
             This node outputs the final result of the workflow.

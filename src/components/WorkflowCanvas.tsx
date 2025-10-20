@@ -15,6 +15,8 @@ import { InputNode } from "./nodes/InputNode";
 import { LLMTaskNode } from "./nodes/LLMTaskNode";
 import { WebScraperNode } from "./nodes/WebScraperNode";
 import { StructuredOutputNode } from "./nodes/StructuredOutputNode";
+import { EmbeddingGeneratorNode } from "./nodes/EmbeddingGeneratorNode";
+import { SimilaritySearchNode } from "./nodes/SimilaritySearchNode";
 import { OutputNode } from "./nodes/OutputNode";
 import { NodeType } from "@/types/workflow";
 
@@ -23,6 +25,8 @@ const nodeTypes: NodeTypes = {
   [NodeType.LLM_TASK]: LLMTaskNode,
   [NodeType.WEB_SCRAPER]: WebScraperNode,
   [NodeType.STRUCTURED_OUTPUT]: StructuredOutputNode,
+  [NodeType.EMBEDDING_GENERATOR]: EmbeddingGeneratorNode,
+  [NodeType.SIMILARITY_SEARCH]: SimilaritySearchNode,
   [NodeType.OUTPUT]: OutputNode,
 };
 

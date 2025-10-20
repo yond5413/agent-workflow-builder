@@ -3,15 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "fastapi-dev":"py -m pip install --upgrade pip setuptools wheel && py -m pip install -r requirements.txt && py -m uvicorn api.index:app --reload",
     "dev": "next dev",
-    "dev:full": "concurrently \"npm run dev\" \"npm run fastapi-dev\"",
-    "build": "next build ",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@mendable/firecrawl-js": "^1.21.1",
+    "@qdrant/js-client-rest": "^1.15.1",
     "axios": "^1.12.2",
+    "cohere-ai": "^7.19.0",
     "concurrently": "^9.2.1",
     "next": "15.5.6",
     "react": "19.1.0",

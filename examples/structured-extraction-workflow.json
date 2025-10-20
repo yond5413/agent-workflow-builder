@@ -19,7 +19,7 @@
       "data": {
         "label": "Extract Key Info",
         "schema": "{\n  \"company\": \"string\",\n  \"product\": \"string\",\n  \"release_date\": \"string\",\n  \"location\": \"string\",\n  \"pricing\": \"string\",\n  \"contact_email\": \"string\"\n}",
-        "model": "openai/gpt-3.5-turbo"
+        "model": "openai/gpt-oss-20b:free"
       },
       "position": {
         "x": 400,

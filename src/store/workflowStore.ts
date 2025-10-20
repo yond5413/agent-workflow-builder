@@ -44,7 +44,15 @@ interface WorkflowStore {
   resetExecutionState: () => void;
 }
 
-let nodeIdCounter = 0;
+// Generate unique node ID using crypto API
+const generateNodeId = (type: NodeType): string => {
+  // Use crypto.randomUUID if available, otherwise fallback to timestamp-based UUID
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${type}-${crypto.randomUUID()}`;
+  }
+  // Fallback for older browsers
+  return `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   // Initial state
@@ -79,13 +87,15 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   },
 
   addNode: (type, position) => {
-    const id = `${type}-${nodeIdCounter++}`;
+    const id = generateNodeId(type);
     
     const defaultData: Record<NodeType, any> = {
       [NodeType.INPUT]: { label: "Input", payload: "" },
-      [NodeType.LLM_TASK]: { label: "LLM Task", prompt: "", model: "openai/gpt-3.5-turbo", temperature: 0.7, max_tokens: 1000 },
+      [NodeType.LLM_TASK]: { label: "LLM Task", prompt: "", model: "z-ai/glm-4.5-air:free", temperature: 0.7, max_tokens: 1000 },
       [NodeType.WEB_SCRAPER]: { label: "Web Scraper", url: "", max_length: 5000 },
-      [NodeType.STRUCTURED_OUTPUT]: { label: "Structured Output", schema: "{}", model: "openai/gpt-3.5-turbo" },
+      [NodeType.STRUCTURED_OUTPUT]: { label: "Structured Output", schema: "{}", model: "z-ai/glm-4.5-air:free" },
+      [NodeType.EMBEDDING_GENERATOR]: { label: "Embedding Generator", model: "embed-english-v3.0", inputType: "search_document" },
+      [NodeType.SIMILARITY_SEARCH]: { label: "Similarity Search", collectionName: "", topK: 5, scoreThreshold: 0.7 },
       [NodeType.OUTPUT]: { label: "Output" },
     };
 

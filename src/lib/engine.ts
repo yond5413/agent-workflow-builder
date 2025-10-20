@@ -11,6 +11,8 @@ import {
   LLMTaskNodeData,
   WebScraperNodeData,
   StructuredOutputNodeData,
+  EmbeddingGeneratorNodeData,
+  SimilaritySearchNodeData,
 } from "@/types/workflow";
 import { groupNodesByDepth } from "./validator";
 
@@ -24,12 +26,14 @@ export class WorkflowEngine {
   private abortController: AbortController;
   private onStateChange?: (nodeId: string, state: NodeExecutionState) => void;
   private onLog?: (log: ExecutionLog) => void;
+  private baseUrl: string;
 
   constructor(
     workflow: Workflow,
     callbacks?: {
       onStateChange?: (nodeId: string, state: NodeExecutionState) => void;
       onLog?: (log: ExecutionLog) => void;
+      baseUrl?: string;
     }
   ) {
     this.workflow = workflow;
@@ -38,6 +42,20 @@ export class WorkflowEngine {
     this.abortController = new AbortController();
     this.onStateChange = callbacks?.onStateChange;
     this.onLog = callbacks?.onLog;
+    // Use provided baseUrl or detect from environment
+    this.baseUrl = callbacks?.baseUrl || this.getBaseUrl();
+  }
+
+  /**
+   * Get base URL for API calls
+   */
+  private getBaseUrl(): string {
+    // In browser context
+    if (typeof window !== "undefined") {
+      return window.location.origin;
+    }
+    // In server context, use environment variable or default
+    return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   }
 
   /**
@@ -148,6 +166,12 @@ export class WorkflowEngine {
         case NodeType.STRUCTURED_OUTPUT:
           output = await this.executeStructuredOutputNode(node, input);
           break;
+        case NodeType.EMBEDDING_GENERATOR:
+          output = await this.executeEmbeddingNode(node, input);
+          break;
+        case NodeType.SIMILARITY_SEARCH:
+          output = await this.executeSimilaritySearchNode(node, input);
+          break;
         case NodeType.OUTPUT:
           output = await this.executeOutputNode(node, input);
           break;
@@ -216,20 +240,35 @@ export class WorkflowEngine {
     const temperature = nodeData.temperature || 0.7;
     const max_tokens = nodeData.max_tokens || 1000;
 
-    const response = await fetch(`/api/fastapi/llm-task`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, model, temperature, max_tokens }),
-      signal: this.abortController.signal,
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/api/llm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, model, temperature, max_tokens }),
+        signal: this.abortController.signal,
+      });
 
-    const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-    if (!result.success) {
-      throw new Error(result.error || "LLM task failed");
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "LLM task failed");
+      }
+
+      return result.data;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("LLM task was cancelled");
+      }
+      throw new Error(
+        `Network error calling LLM API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
-
-    return result.data;
   }
 
   /**
@@ -244,20 +283,35 @@ export class WorkflowEngine {
       throw new Error("URL is required for web scraper");
     }
 
-    const response = await fetch(`/api/fastapi/web-scrape`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, max_length }),
-      signal: this.abortController.signal,
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/api/scrape`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, max_length }),
+        signal: this.abortController.signal,
+      });
 
-    const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-    if (!result.success) {
-      throw new Error(result.error || "Web scraping failed");
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Web scraping failed");
+      }
+
+      return result.data;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Web scraping was cancelled");
+      }
+      throw new Error(
+        `Network error calling scrape API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
-
-    return result.data;
   }
 
   /**
@@ -285,20 +339,168 @@ export class WorkflowEngine {
     // Extract text from input
     const text = this.extractTextFromInput(input);
 
-    const response = await fetch(`/api/fastapi/structured-extract`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, schema, model }),
-      signal: this.abortController.signal,
-    });
+    try {
+      const response = await fetch(`${this.baseUrl}/api/structured-extract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, schema, model }),
+        signal: this.abortController.signal,
+      });
 
-    const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
-    if (!result.success) {
-      throw new Error(result.error || "Structured extraction failed");
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Structured extraction failed");
+      }
+
+      return result.data;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Structured extraction was cancelled");
+      }
+      throw new Error(
+        `Network error calling structured extract API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  /**
+   * Execute Embedding Generator Node
+   */
+  private async executeEmbeddingNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as EmbeddingGeneratorNodeData;
+    const model = nodeData.model || "embed-english-v3.0";
+    const inputType = nodeData.inputType || "search_document";
+
+    // Use custom text if provided, otherwise extract from input
+    const text = nodeData.text || this.extractTextFromInput(input);
+
+    if (!text) {
+      throw new Error("No text available for embedding generation");
     }
 
-    return result.data;
+    try {
+      const response = await fetch(`${this.baseUrl}/api/embedding`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, model, inputType }),
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Embedding generation failed");
+      }
+
+      return {
+        ...result.data,
+        vector: result.data.embeddings[0], // Extract first embedding for convenience
+      };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Embedding generation was cancelled");
+      }
+      throw new Error(
+        `Network error calling embedding API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  /**
+   * Execute Similarity Search Node
+   */
+  private async executeSimilaritySearchNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as SimilaritySearchNodeData;
+    const collectionName = nodeData.collectionName;
+    const topK = nodeData.topK || 5;
+    const scoreThreshold = nodeData.scoreThreshold || 0.7;
+
+    if (!collectionName) {
+      throw new Error("Collection name is required for similarity search");
+    }
+
+    // Determine if we have a vector or text query
+    let vector = null;
+    let queryText = nodeData.queryText || null;
+
+    // Try to extract vector from input
+    if (input) {
+      if (Array.isArray(input)) {
+        // Input is directly a vector
+        vector = input;
+      } else if (input.vector) {
+        // Input has a vector field
+        vector = input.vector;
+      } else if (input.embeddings && Array.isArray(input.embeddings)) {
+        // Input has embeddings array
+        vector = input.embeddings[0];
+      }
+    }
+
+    // If no vector and no queryText, try to extract text from input
+    if (!vector && !queryText) {
+      queryText = this.extractTextFromInput(input);
+      if (!queryText) {
+        throw new Error(
+          "No vector or query text available for similarity search"
+        );
+      }
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/similarity-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          collectionName,
+          vector,
+          queryText,
+          topK,
+          scoreThreshold,
+        }),
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Similarity search failed");
+      }
+
+      return result.data;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Similarity search was cancelled");
+      }
+      throw new Error(
+        `Network error calling similarity search API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
   }
 
   /**
@@ -352,10 +554,36 @@ export class WorkflowEngine {
   private extractTextFromInput(input: any): string {
     if (!input) return "";
     if (typeof input === "string") return input;
+    
+    // Try common text fields
     if (input.text) return input.text;
     if (input.content) return input.content;
-    if (input.data) return JSON.stringify(input.data);
-    return JSON.stringify(input);
+    if (input.markdown) return input.markdown;
+    
+    // Handle data field
+    if (input.data) {
+      if (typeof input.data === "string") return input.data;
+      if (typeof input.data === "object") {
+        // Try to extract text from nested objects
+        if (input.data.text) return input.data.text;
+        if (input.data.content) return input.data.content;
+      }
+      return JSON.stringify(input.data);
+    }
+    
+    // Fallback: stringify the input, but truncate if too large
+    const stringified = JSON.stringify(input);
+    const MAX_LENGTH = 50000; // Reasonable limit for LLM context
+    
+    if (stringified.length > MAX_LENGTH) {
+      this.log(
+        "warning",
+        `Input text truncated from ${stringified.length} to ${MAX_LENGTH} characters`
+      );
+      return stringified.substring(0, MAX_LENGTH) + "... [truncated]";
+    }
+    
+    return stringified;
   }
 
   /**

@@ -37,6 +37,18 @@ const nodeTypes: NodeTypeInfo[] = [
     description: "Extract structured data",
   },
   {
+    type: NodeType.EMBEDDING_GENERATOR,
+    icon: "🧬",
+    label: "Embedding Generator",
+    description: "Generate text embeddings",
+  },
+  {
+    type: NodeType.SIMILARITY_SEARCH,
+    icon: "🔍",
+    label: "Similarity Search",
+    description: "Vector similarity search",
+  },
+  {
     type: NodeType.OUTPUT,
     icon: "📤",
     label: "Output",

@@ -20,7 +20,7 @@
       "data": {
         "label": "Summarize Content",
         "prompt": "Please provide a concise summary of the following content in 3-4 sentences:\n\n{{input}}",
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openai/gpt-oss-20b:free",
         "temperature": 0.5,
         "max_tokens": 200
       },

@@ -8,6 +8,8 @@ import {
   LLMTaskNodeData,
   WebScraperNodeData,
   StructuredOutputNodeData,
+  EmbeddingGeneratorNodeData,
+  SimilaritySearchNodeData,
 } from "@/types/workflow";
 
 /**
@@ -80,6 +82,145 @@ export function validateWorkflow(workflow: Workflow): ValidationResult {
   };
 }
 
+// Node-specific validators (DRY pattern)
+type NodeValidator = (node: WorkflowNode) => ValidationError[];
+
+const validateInputNode: NodeValidator = () => {
+  // Input nodes are valid with minimal config
+  return [];
+};
+
+const validateLLMTaskNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const llmData = node.data as LLMTaskNodeData;
+  
+  if (!llmData.prompt && llmData.prompt !== "") {
+    errors.push({
+      nodeId: node.id,
+      message: "LLM Task node requires a prompt",
+      type: "error",
+    });
+  }
+  
+  return errors;
+};
+
+const validateWebScraperNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const scraperData = node.data as WebScraperNodeData;
+  
+  if (!scraperData.url) {
+    errors.push({
+      nodeId: node.id,
+      message: "Web Scraper node requires a URL",
+      type: "error",
+    });
+  } else if (!isValidUrl(scraperData.url)) {
+    errors.push({
+      nodeId: node.id,
+      message: "Invalid URL format",
+      type: "error",
+    });
+  }
+  
+  return errors;
+};
+
+const validateStructuredOutputNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const structuredData = node.data as StructuredOutputNodeData;
+  
+  if (!structuredData.schema) {
+    errors.push({
+      nodeId: node.id,
+      message: "Structured Output node requires a schema",
+      type: "error",
+    });
+  } else {
+    try {
+      JSON.parse(structuredData.schema);
+    } catch {
+      errors.push({
+        nodeId: node.id,
+        message: "Invalid JSON schema",
+        type: "error",
+      });
+    }
+  }
+  
+  return errors;
+};
+
+const validateEmbeddingGeneratorNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const embeddingData = node.data as EmbeddingGeneratorNodeData;
+  
+  // Validate model if provided
+  if (embeddingData.model) {
+    const validModels = ["embed-english-v3.0", "embed-multilingual-v3.0"];
+    if (!validModels.includes(embeddingData.model)) {
+      errors.push({
+        nodeId: node.id,
+        message: `Invalid embedding model. Must be one of: ${validModels.join(", ")}`,
+        type: "warning",
+      });
+    }
+  }
+  
+  return errors;
+};
+
+const validateSimilaritySearchNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const searchData = node.data as SimilaritySearchNodeData;
+  
+  if (!searchData.collectionName) {
+    errors.push({
+      nodeId: node.id,
+      message: "Similarity Search node requires a collection name",
+      type: "error",
+    });
+  }
+  
+  if (searchData.topK !== undefined) {
+    if (searchData.topK < 1 || searchData.topK > 100) {
+      errors.push({
+        nodeId: node.id,
+        message: "topK must be between 1 and 100",
+        type: "error",
+      });
+    }
+  }
+  
+  if (searchData.scoreThreshold !== undefined) {
+    if (searchData.scoreThreshold < 0 || searchData.scoreThreshold > 1) {
+      errors.push({
+        nodeId: node.id,
+        message: "Score threshold must be between 0 and 1",
+        type: "error",
+      });
+    }
+  }
+  
+  return errors;
+};
+
+const validateOutputNode: NodeValidator = () => {
+  // Output nodes are valid with minimal config
+  return [];
+};
+
+// Validator registry - DRY pattern for node validation
+const NODE_VALIDATORS: Record<NodeType, NodeValidator> = {
+  [NodeType.INPUT]: validateInputNode,
+  [NodeType.LLM_TASK]: validateLLMTaskNode,
+  [NodeType.WEB_SCRAPER]: validateWebScraperNode,
+  [NodeType.STRUCTURED_OUTPUT]: validateStructuredOutputNode,
+  [NodeType.EMBEDDING_GENERATOR]: validateEmbeddingGeneratorNode,
+  [NodeType.SIMILARITY_SEARCH]: validateSimilaritySearchNode,
+  [NodeType.OUTPUT]: validateOutputNode,
+};
+
 /**
  * Validates a single node's configuration
  */
@@ -100,69 +241,19 @@ function validateNode(node: WorkflowNode): ValidationError[] {
       message: "Node missing type",
       type: "error",
     });
+    return errors;
   }
 
-  // Type-specific validation
-  switch (node.type) {
-    case NodeType.INPUT:
-      // Input nodes are valid with minimal config
-      break;
-
-    case NodeType.LLM_TASK: {
-      const llmData = node.data as LLMTaskNodeData;
-      if (!llmData.prompt && llmData.prompt !== "") {
-        errors.push({
-          nodeId: node.id,
-          message: "LLM Task node requires a prompt",
-          type: "error",
-        });
-      }
-      break;
-    }
-
-    case NodeType.WEB_SCRAPER: {
-      const scraperData = node.data as WebScraperNodeData;
-      if (!scraperData.url) {
-        errors.push({
-          nodeId: node.id,
-          message: "Web Scraper node requires a URL",
-          type: "error",
-        });
-      } else if (!isValidUrl(scraperData.url)) {
-        errors.push({
-          nodeId: node.id,
-          message: "Invalid URL format",
-          type: "error",
-        });
-      }
-      break;
-    }
-
-    case NodeType.STRUCTURED_OUTPUT: {
-      const structuredData = node.data as StructuredOutputNodeData;
-      if (!structuredData.schema) {
-        errors.push({
-          nodeId: node.id,
-          message: "Structured Output node requires a schema",
-          type: "error",
-        });
-      } else {
-        try {
-          JSON.parse(structuredData.schema);
-        } catch {
-          errors.push({
-            nodeId: node.id,
-            message: "Invalid JSON schema",
-            type: "error",
-          });
-        }
-      }
-      break;
-    }
-
-    case NodeType.OUTPUT:
-      // Output nodes are valid with minimal config
-      break;
+  // Use validator from registry
+  const validator = NODE_VALIDATORS[node.type];
+  if (validator) {
+    errors.push(...validator(node));
+  } else {
+    errors.push({
+      nodeId: node.id,
+      message: `Unknown node type: ${node.type}`,
+      type: "error",
+    });
   }
 
   return errors;

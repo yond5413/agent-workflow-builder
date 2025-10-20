@@ -21,8 +21,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get base URL from request
+    const baseUrl = new URL(request.url).origin;
+
     // Execute workflow
-    const engine = new WorkflowEngine(workflow);
+    const engine = new WorkflowEngine(workflow, { baseUrl });
     const result = await engine.execute();
 
     return NextResponse.json(result);
