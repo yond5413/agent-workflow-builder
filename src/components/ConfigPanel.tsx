@@ -79,16 +79,16 @@ export function ConfigPanel() {
             <div>
               <label className="block text-sm font-medium mb-1">Model</label>
               <select
-                value={selectedNode.data.model || "openai/gpt-3.5-turbo"}
+                value={selectedNode.data.model || "z-ai/glm-4.5-air:free"}
                 onChange={(e) => handleDataChange("model", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="openai/gpt-4">GPT-4</option>
-                <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
-                <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
-                <option value="google/gemini-pro">Gemini Pro</option>
+                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
+                <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
+                <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
+                <option value="amoonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
+                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
+                <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
               </select>
             </div>
             <div>
@@ -160,15 +160,16 @@ export function ConfigPanel() {
             <div>
               <label className="block text-sm font-medium mb-1">Model</label>
               <select
-                value={selectedNode.data.model || "openai/gpt-3.5-turbo"}
+                value={selectedNode.data.model || "openai/gpt-oss-20b:free"}
                 onChange={(e) => handleDataChange("model", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="openai/gpt-4">GPT-4</option>
-                <option value="openai/gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="anthropic/claude-3-sonnet">Claude 3 Sonnet</option>
-                <option value="anthropic/claude-3-opus">Claude 3 Opus</option>
+                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
+                <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
+                <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
+                <option value="amoonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
+                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
+                <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
               </select>
             </div>
           </>
