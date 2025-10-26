@@ -22,6 +22,7 @@ import { TextToImageNode } from "./nodes/TextToImageNode";
 import { ImageToVideoNode } from "./nodes/ImageToVideoNode";
 import { OutputNode } from "./nodes/OutputNode";
 import { NodeType } from "@/types/workflow";
+import { TextExportNode } from "./nodes/TextExportNode";
 
 const nodeTypes: NodeTypes = {
   [NodeType.INPUT]: InputNode,
@@ -33,6 +34,7 @@ const nodeTypes: NodeTypes = {
   [NodeType.TEXT_TO_SPEECH]: TextToSpeechNode,
   [NodeType.TEXT_TO_IMAGE]: TextToImageNode,
   [NodeType.IMAGE_TO_VIDEO]: ImageToVideoNode,
+  [NodeType.TEXT_EXPORT]: TextExportNode,
   [NodeType.OUTPUT]: OutputNode,
 };
 
@@ -58,7 +60,7 @@ export function WorkflowCanvas() {
   }, [selectNode]);
 
   return (
-    <div className="w-full h-full bg-gray-50">
+    <div className="w-full h-full bg-[var(--background)]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -73,12 +75,7 @@ export function WorkflowCanvas() {
       >
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls />
-        <MiniMap
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-          className="bg-gray-100"
-        />
+        <MiniMap nodeStrokeWidth={3} zoomable pannable className="bg-white/50 dark:bg-white/10" />
       </ReactFlow>
     </div>
   );

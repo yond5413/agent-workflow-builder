@@ -1,0 +1,46 @@
+{
+  "id": "example-text-export",
+  "nodes": [
+    {
+      "id": "input-1",
+      "type": "input",
+      "position": { "x": 100, "y": 120 },
+      "data": { "label": "Input", "payload": "Hello there! This is a quick transcript example." }
+    },
+    {
+      "id": "llm-1",
+      "type": "llm_task",
+      "position": { "x": 380, "y": 120 },
+      "data": { "label": "Summarize", "prompt": "Summarize: {{input}}", "model": "z-ai/glm-4.5-air:free", "temperature": 0.7, "max_tokens": 200 }
+    },
+    {
+      "id": "export-1",
+      "type": "text_export",
+      "position": { "x": 660, "y": 120 },
+      "data": {
+        "label": "Export",
+        "format": "pdf",
+        "filename": "summary-{timestamp}.pdf",
+        "includeTimestamp": true,
+        "columns": ["id","inputText","summary","model","createdAt"],
+        "columnMap": {"id":"ID","inputText":"Input","summary":"Summary","model":"Model","createdAt":"Created At"},
+        "pdf": {"template":"transcript-summary","title":"Conversation Summary","subtitle":"Auto-generated report","readingLevel":"plain"}
+      }
+    },
+    {
+      "id": "output-1",
+      "type": "output",
+      "position": { "x": 940, "y": 120 },
+      "data": { "label": "Output" }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "input-1", "target": "llm-1" },
+    { "id": "e2", "source": "llm-1", "target": "export-1" },
+    { "id": "e3", "source": "export-1", "target": "output-1" }
+  ],
+  "metadata": { "name": "Text Export Example", "description": "Summarize text then export as PDF" }
+}
+
+
+

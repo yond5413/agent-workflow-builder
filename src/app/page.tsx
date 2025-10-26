@@ -80,10 +80,7 @@ export default function Home() {
           }
         });
 
-        // Add logs
-        if (result.logs && Array.isArray(result.logs)) {
-          result.logs.forEach((log: ExecutionLog) => addLog(log));
-        }
+        
 
         addLog({
           id: `final-${Date.now()}`,

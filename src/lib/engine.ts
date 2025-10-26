@@ -16,8 +16,11 @@ import {
   TextToSpeechNodeData,
   TextToImageNodeData,
   ImageToVideoNodeData,
+  TextExportNodeData,
+  ExportFormat,
 } from "@/types/workflow";
 import { groupNodesByDepth } from "./validator";
+import { createCsvDataUrl, createTranscriptSummaryPdfDataUrl } from "./export";
 
 /**
  * Main execution engine for workflows
@@ -183,6 +186,9 @@ export class WorkflowEngine {
           break;
         case NodeType.IMAGE_TO_VIDEO:
           output = await this.executeImageToVideoNode(node, input);
+          break;
+        case NodeType.TEXT_EXPORT:
+          output = await this.executeTextExportNode(node, input);
           break;
         case NodeType.OUTPUT:
           output = await this.executeOutputNode(node, input);
@@ -693,6 +699,91 @@ export class WorkflowEngine {
       }
       throw error;
     }
+  }
+
+  /**
+   * Execute Text Export Node (CSV/PDF)
+   */
+  private async executeTextExportNode(node: WorkflowNode, input: any): Promise<any> {
+    const nodeData = node.data as TextExportNodeData;
+    const format: ExportFormat = nodeData.format || "pdf";
+
+    // Attempt to derive transcript (original input) and summary (LLM content)
+    let transcript = "";
+    let summary = "";
+    let model: string | undefined;
+
+    // Helper to try extract fields from an object
+    const tryExtract = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return;
+      if (typeof obj.data === 'string') {
+        transcript = transcript || obj.data;
+      }
+      if (obj.text && typeof obj.text === 'string') {
+        transcript = transcript || obj.text;
+      }
+      if (obj.content && typeof obj.content === 'string') {
+        summary = summary || obj.content;
+      }
+      if (typeof obj.summary === 'string') {
+        summary = summary || obj.summary;
+      }
+      if (obj.model && typeof obj.model === 'string') {
+        model = model || obj.model;
+      }
+    };
+
+    if (input && typeof input === 'object' && !Array.isArray(input)) {
+      // Possibly multiple upstream inputs
+      for (const value of Object.values(input)) {
+        tryExtract(value);
+      }
+      // Fallback: single object
+      tryExtract(input);
+    } else if (typeof input === 'string') {
+      // If only a string is provided, treat as summary
+      summary = input;
+    }
+
+    // If we still don't have transcript, try generic extraction
+    if (!transcript) {
+      transcript = this.extractTextFromInput(input);
+    }
+
+    const createdAt = new Date().toISOString();
+    const id = `${node.id}-${Date.now()}`;
+
+    // Prepare filename
+    const ext = format === 'csv' ? 'csv' : 'pdf';
+    const baseName = nodeData.filename || `summary-{timestamp}.${ext}`;
+    const timestamp = nodeData.includeTimestamp === false ? '' : Date.now().toString();
+    const finalName = baseName.replace('{timestamp}', timestamp).replace('..', '.');
+
+    if (format === 'csv') {
+      const columns = nodeData.columns || ["id","inputText","summary","model","createdAt"];
+      const row: Record<string, any> = {
+        id,
+        inputText: transcript,
+        summary,
+        model: model || '',
+        createdAt,
+      };
+      const dataUrl = createCsvDataUrl([row], { columns, columnMap: nodeData.columnMap });
+      return { type: 'file', format: 'csv', filename: finalName, dataUrl };
+    }
+
+    // PDF generation
+    const dataUrl = await createTranscriptSummaryPdfDataUrl({
+      transcript: transcript || 'No transcript provided.',
+      summary: summary || 'No summary provided.',
+      options: {
+        title: nodeData.pdf?.title || 'Conversation Summary',
+        subtitle: nodeData.pdf?.subtitle || 'Auto-generated report',
+        template: 'transcript-summary',
+      },
+    });
+
+    return { type: 'file', format: 'pdf', filename: finalName, dataUrl };
   }
 
   /**

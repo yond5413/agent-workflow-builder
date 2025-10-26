@@ -288,6 +288,93 @@ export function ConfigPanel() {
           </div>
         )}
 
+        {selectedNode.type === NodeType.TEXT_EXPORT && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Format</label>
+              <select
+                value={selectedNode.data.format || "pdf"}
+                onChange={(e) => handleDataChange("format", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              >
+                <option value="pdf">PDF</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Filename</label>
+              <input
+                type="text"
+                value={selectedNode.data.filename || (selectedNode.data.format === 'csv' ? 'summary-{timestamp}.csv' : 'summary-{timestamp}.pdf')}
+                onChange={(e) => handleDataChange("filename", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="summary-{timestamp}.pdf"
+              />
+              <p className="text-xs text-gray-500 mt-1">Use {"{timestamp}"} to include the current time.</p>
+            </div>
+            {selectedNode.data.format === 'csv' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">CSV Columns (comma-separated)</label>
+                <input
+                  type="text"
+                  value={(selectedNode.data.columns || ["id","inputText","summary","model","createdAt"]).join(',')}
+                  onChange={(e) => handleDataChange("columns", e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  placeholder="id,inputText,summary,model,createdAt"
+                />
+                <p className="text-xs text-gray-500 mt-1">Default: id, inputText, summary, model, createdAt</p>
+              </div>
+            )}
+            {selectedNode.data.format === 'pdf' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-1">PDF Title</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.pdf?.title || "Conversation Summary"}
+                    onChange={(e) => handleDataChange("pdf", { ...(selectedNode.data.pdf || {}), title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">PDF Subtitle</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.pdf?.subtitle || "Auto-generated report"}
+                    onChange={(e) => handleDataChange("pdf", { ...(selectedNode.data.pdf || {}), subtitle: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+              </>
+            )}
+
+            {selectedNode.data.output?.dataUrl && (
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                <label className="block text-sm font-medium">Latest Export</label>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600 truncate mr-2">{selectedNode.data.output.filename}</span>
+                  <a
+                    href={selectedNode.data.output.dataUrl}
+                    download={selectedNode.data.output.filename}
+                    className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Download
+                  </a>
+                </div>
+                {selectedNode.data.output.format === 'pdf' ? (
+                  <object data={selectedNode.data.output.dataUrl} type="application/pdf" className="w-full h-48 border rounded">
+                    <p className="text-xs text-gray-500 p-2">PDF preview not available. Use Download.</p>
+                  </object>
+                ) : (
+                  <pre className="w-full h-48 bg-gray-50 border rounded p-2 text-xs overflow-auto">
+                    {atob(selectedNode.data.output.dataUrl.split(',')[1]).split('\n').slice(0, 12).join('\n')}
+                  </pre>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
         {/* Output preview */}
         {selectedNode.data.output && (
           <div>

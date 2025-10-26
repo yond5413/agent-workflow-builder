@@ -9,6 +9,7 @@ export enum NodeType {
   TEXT_TO_SPEECH = "text_to_speech",
   TEXT_TO_IMAGE = "text_to_image",
   IMAGE_TO_VIDEO = "image_to_video",
+  TEXT_EXPORT = "text_export",
   OUTPUT = "output",
 }
 
@@ -101,6 +102,24 @@ export interface ImageToVideoNodeData {
   output?: any; // Base64 encoded video
 }
 
+export type ExportFormat = "csv" | "pdf";
+
+export interface TextExportNodeData {
+  label?: string;
+  format?: ExportFormat; // 'csv' | 'pdf'
+  filename?: string; // e.g., "summary-{timestamp}.{ext}"
+  columns?: string[]; // CSV columns order
+  columnMap?: Record<string, string>; // field -> CSV header title
+  includeTimestamp?: boolean; // append createdAt in filename
+  pdf?: {
+    template?: "transcript-summary";
+    title?: string;
+    subtitle?: string;
+    readingLevel?: "plain";
+  };
+  output?: any; // file artifact metadata { type, format, filename, dataUrl }
+}
+
 export type NodeData =
   | InputNodeData
   | LLMTaskNodeData
@@ -111,6 +130,7 @@ export type NodeData =
   | TextToSpeechNodeData
   | TextToImageNodeData
   | ImageToVideoNodeData
+  | TextExportNodeData
   | OutputNodeData;
 
 // Workflow Node

@@ -223,6 +223,11 @@ const validateImageToVideoNode: NodeValidator = () => {
   return [];
 };
 
+const validateTextExportNode: NodeValidator = () => {
+  // Text export can work with upstream inputs; minimal config required
+  return [];
+};
+
 const validateOutputNode: NodeValidator = () => {
   // Output nodes are valid with minimal config
   return [];
@@ -239,6 +244,7 @@ const NODE_VALIDATORS: Record<NodeType, NodeValidator> = {
   [NodeType.TEXT_TO_SPEECH]: validateTextToSpeechNode,
   [NodeType.TEXT_TO_IMAGE]: validateTextToImageNode,
   [NodeType.IMAGE_TO_VIDEO]: validateImageToVideoNode,
+  [NodeType.TEXT_EXPORT]: validateTextExportNode,
   [NodeType.OUTPUT]: validateOutputNode,
 };
 

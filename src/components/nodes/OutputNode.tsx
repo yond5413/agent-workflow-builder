@@ -27,6 +27,22 @@ export function OutputNode({ id, data, selected }: NodeProps) {
     const hasImage = data.output.imageBase64 || (Array.isArray(data.output) && data.output.some((item: any) => item?.imageBase64));
     const hasAudio = data.output.audioBase64;
     const hasVideo = data.output.videoBase64;
+    const isFileArtifact = data.output.dataUrl && data.output.filename;
+
+    if (isFileArtifact) {
+      return (
+        <div className="text-xs text-gray-500 space-y-2">
+          <div className="truncate">📎 {data.output.filename}</div>
+          <a
+            href={data.output.dataUrl}
+            download={data.output.filename}
+            className="inline-block px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Download
+          </a>
+        </div>
+      );
+    }
 
     if (hasImage || hasAudio || hasVideo) {
       return (
@@ -44,9 +60,10 @@ export function OutputNode({ id, data, selected }: NodeProps) {
       : JSON.stringify(data.output).substring(0, 100);
     
     return (
-      <p className="text-xs text-gray-500 truncate" title={preview}>
-        {preview}{preview.length > 100 && '...'}
-      </p>
+      <pre className="text-xs bg-white/60 dark:bg-white/5 border border-[var(--border)] rounded p-2 max-h-24 overflow-auto whitespace-pre-wrap break-words" title={preview}>
+        {preview}
+        {preview.length > 100 && '...'}
+      </pre>
     );
   };
 
@@ -63,12 +80,7 @@ export function OutputNode({ id, data, selected }: NodeProps) {
       {hasOutput ? (
         <div className="space-y-2">
           {renderOutputPreview()}
-          <button
-            onClick={handleExportJSON}
-            className="w-full px-2 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
-          >
-            📥 Export JSON
-          </button>
+          <button onClick={handleExportJSON} className="w-full px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors">📥 Export JSON</button>
         </div>
       ) : (
         <p className="text-xs text-gray-400 italic">No output yet</p>

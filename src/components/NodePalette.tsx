@@ -67,6 +67,12 @@ const nodeTypes: NodeTypeInfo[] = [
     description: "Create video from images",
   },
   {
+    type: NodeType.TEXT_EXPORT,
+    icon: "📄",
+    label: "Text Export",
+    description: "Export CSV or PDF",
+  },
+  {
     type: NodeType.OUTPUT,
     icon: "📤",
     label: "Output",
@@ -87,23 +93,23 @@ export function NodePalette() {
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
-      <h2 className="text-lg font-bold mb-4 text-gray-800">Node Palette</h2>
+    <div className="w-64 bg-[var(--background)] border-r border-[var(--border)] p-4 overflow-y-auto">
+      <h2 className="text-lg font-bold mb-4 text-[var(--foreground)]">Node Palette</h2>
       
       <div className="space-y-2">
         {nodeTypes.map((nodeType) => (
           <button
             key={nodeType.type}
             onClick={() => handleAddNode(nodeType.type)}
-            className="w-full p-3 bg-gray-50 hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-300 rounded-lg transition-all text-left group"
+            className="w-full p-3 bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 border-2 border-[var(--border)] hover:border-[var(--primary)] rounded-lg transition-all text-left group"
           >
             <div className="flex items-start gap-2">
               <span className="text-2xl">{nodeType.icon}</span>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-gray-800 group-hover:text-blue-600">
+                <h3 className="font-semibold text-sm text-[var(--foreground)] group-hover:text-[var(--primary)]">
                   {nodeType.label}
                 </h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-[color:var(--muted)] mt-1">
                   {nodeType.description}
                 </p>
               </div>
@@ -112,9 +118,9 @@ export function NodePalette() {
         ))}
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <h3 className="font-semibold text-sm text-gray-700 mb-2">How to use</h3>
-        <ul className="text-xs text-gray-600 space-y-2">
+      <div className="mt-6 pt-6 border-t border-[var(--border)]">
+        <h3 className="font-semibold text-sm text-[var(--foreground)] mb-2">How to use</h3>
+        <ul className="text-xs text-[color:var(--muted)] space-y-2">
           <li>• Click a node type to add it</li>
           <li>• Drag nodes to reposition</li>
           <li>• Connect nodes by dragging from output to input</li>

@@ -2,6 +2,8 @@
 
 import React, { useRef } from "react";
 import { useWorkflowStore } from "@/store/workflowStore";
+import { Button } from "./ui/Button";
+import { ThemeToggle } from "./ThemeToggle";
 import { exportWorkflow, importWorkflow, downloadJSON } from "@/lib/workflow-io";
 import { WorkflowExecutionStatus, NodeExecutionState } from "@/types/workflow";
 
@@ -52,66 +54,41 @@ export function Toolbar({ onExecute, onStop, isExecuting }: ToolbarProps) {
   };
 
   return (
-    <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+    <div className="h-16 bg-[var(--background)] border-b border-[var(--border)] flex items-center justify-between px-6 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-black/20">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold text-gray-800">Workflow Builder</h1>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-600">{nodes.length} nodes</span>
-          <span className="text-gray-300">•</span>
-          <span className="text-gray-600">{edges.length} connections</span>
+        <h1 className="text-xl font-bold text-[var(--foreground)]">Workflow Builder</h1>
+        <div className="flex items-center gap-2 text-sm text-[color:var(--muted)]">
+          <span>{nodes.length} nodes</span>
+          <span className="text-[var(--border)]">•</span>
+          <span>{edges.length} connections</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        {/* Execution controls */}
+      <div className="flex items-center gap-2">
         {isExecuting ? (
-          <button
-            onClick={onStop}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-medium flex items-center gap-2"
-          >
-            <span>⏹️</span>
-            Stop
-          </button>
+          <Button variant="danger" onClick={onStop}>
+            ⏹️ Stop
+          </Button>
         ) : (
-          <button
-            onClick={onExecute}
-            disabled={nodes.length === 0}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <span>▶️</span>
-            Run Workflow
-          </button>
+          <Button onClick={onExecute} disabled={nodes.length === 0}>
+            ▶️ Run Workflow
+          </Button>
         )}
 
         {executionStatus !== WorkflowExecutionStatus.IDLE && !isExecuting && (
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
-          >
-            <span>🔄</span>
-            Reset
-          </button>
+          <Button variant="secondary" onClick={handleReset}>
+            🔄 Reset
+          </Button>
         )}
 
-        <div className="w-px h-8 bg-gray-300" />
+        <div className="w-px h-8 bg-[var(--border)] mx-2" />
 
-        {/* File operations */}
-        <button
-          onClick={handleSave}
-          disabled={nodes.length === 0}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <span>💾</span>
-          Save
-        </button>
-
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
-        >
-          <span>📁</span>
-          Load
-        </button>
+        <Button variant="secondary" onClick={handleSave} disabled={nodes.length === 0}>
+          💾 Save
+        </Button>
+        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+          📁 Load
+        </Button>
         <input
           ref={fileInputRef}
           type="file"
@@ -119,15 +96,13 @@ export function Toolbar({ onExecute, onStop, isExecuting }: ToolbarProps) {
           onChange={handleLoad}
           className="hidden"
         />
+        <Button variant="ghost" onClick={handleClear} disabled={nodes.length === 0}>
+          🗑️ Clear
+        </Button>
 
-        <button
-          onClick={handleClear}
-          disabled={nodes.length === 0}
-          className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <span>🗑️</span>
-          Clear
-        </button>
+        <div className="ml-2">
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );

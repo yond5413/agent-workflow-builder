@@ -12,12 +12,20 @@ export function InputNode({ id, data, selected }: NodeProps) {
       icon="📥"
       title="Input"
     >
-      {data.payload && (
-        <p className="text-gray-700 truncate" title={data.payload}>
-          {data.payload.substring(0, 50)}
-          {data.payload.length > 50 && "..."}
-        </p>
-      )}
+      <div className="text-xs">
+        {data.payload ? (
+          <pre
+            className="bg-white/60 dark:bg-white/5 border border-[var(--border)] rounded p-2 max-h-24 overflow-auto whitespace-pre-wrap break-words"
+            title={typeof data.payload === 'string' ? data.payload : ''}
+          >
+            {typeof data.payload === 'string'
+              ? data.payload
+              : JSON.stringify(data.payload, null, 2)}
+          </pre>
+        ) : (
+          <p className="text-[color:var(--muted)]">No input yet</p>
+        )}
+      </div>
     </BaseNode>
   );
 }

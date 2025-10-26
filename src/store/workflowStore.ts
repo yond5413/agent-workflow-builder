@@ -99,6 +99,26 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       [NodeType.TEXT_TO_SPEECH]: { label: "Text to Speech", text: "", voiceId: "JBFqnCBsd6RMkjVDRZzb" },
       [NodeType.TEXT_TO_IMAGE]: { label: "Text to Image", prompt: "" },
       [NodeType.IMAGE_TO_VIDEO]: { label: "Image to Video", images: [], duration: 3 },
+      [NodeType.TEXT_EXPORT]: {
+        label: "Text Export",
+        format: "pdf",
+        filename: "summary-{timestamp}.pdf",
+        includeTimestamp: true,
+        columns: ["id", "inputText", "summary", "model", "createdAt"],
+        columnMap: {
+          id: "ID",
+          inputText: "Input",
+          summary: "Summary",
+          model: "Model",
+          createdAt: "Created At",
+        },
+        pdf: {
+          template: "transcript-summary",
+          title: "Conversation Summary",
+          subtitle: "Auto-generated report",
+          readingLevel: "plain",
+        },
+      },
       [NodeType.OUTPUT]: { label: "Output" },
     };
 
