@@ -27,7 +27,7 @@ export default function Home() {
   } = useWorkflowStore();
 
   const [isExecuting, setIsExecuting] = useState(false);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [engineRef, setEngineRef] = useState<any | null>(null);
 
   const handleExecute = useCallback(async () => {
     if (nodes.length === 0) {
@@ -46,18 +46,26 @@ export default function Home() {
     });
 
     const workflow = exportWorkflow(nodes, edges);
-    const controller = new AbortController();
-    setAbortController(controller);
 
+    // Execute workflow CLIENT-SIDE to support browser-only nodes (image-to-video)
     try {
-      const response = await fetch("/api/workflow/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(workflow),
-        signal: controller.signal,
+      // Dynamic import to ensure client-side execution
+      const { WorkflowEngine } = await import("@/lib/engine");
+      
+      const engine = new WorkflowEngine(workflow, {
+        onStateChange: (nodeId, state) => {
+          setNodeExecutionState(nodeId, state);
+        },
+        onLog: (log) => {
+          addLog(log);
+        },
+        baseUrl: window.location.origin,
       });
+      
+      // Store engine reference for cancellation
+      setEngineRef(engine);
 
-      const result = await response.json();
+      const result = await engine.execute();
 
       if (result.success) {
         setExecutionStatus(WorkflowExecutionStatus.COMPLETED);
@@ -131,13 +139,13 @@ export default function Home() {
       }
     } finally {
       setIsExecuting(false);
-      setAbortController(null);
+      setEngineRef(null);
     }
   }, [nodes, edges, setExecutionStatus, setNodeExecutionState, addLog, clearLogs, updateNodeData]);
 
   const handleStop = useCallback(() => {
-    if (abortController) {
-      abortController.abort();
+    if (engineRef) {
+      engineRef.cancel();
       addLog({
         id: `stop-${Date.now()}`,
         timestamp: Date.now(),
@@ -145,7 +153,7 @@ export default function Home() {
         message: "Stopping workflow...",
       });
     }
-  }, [abortController, addLog]);
+  }, [engineRef, addLog]);
 
   return (
     <ReactFlowProvider>

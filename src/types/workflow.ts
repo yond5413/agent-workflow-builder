@@ -6,6 +6,9 @@ export enum NodeType {
   STRUCTURED_OUTPUT = "structured_output",
   EMBEDDING_GENERATOR = "embedding_generator",
   SIMILARITY_SEARCH = "similarity_search",
+  TEXT_TO_SPEECH = "text_to_speech",
+  TEXT_TO_IMAGE = "text_to_image",
+  IMAGE_TO_VIDEO = "image_to_video",
   OUTPUT = "output",
 }
 
@@ -77,6 +80,27 @@ export interface SimilaritySearchNodeData {
   output?: any;
 }
 
+export interface TextToSpeechNodeData {
+  label?: string;
+  text?: string;
+  voiceId?: string;
+  output?: any; // Base64 encoded audio
+}
+
+export interface TextToImageNodeData {
+  label?: string;
+  prompt?: string;
+  output?: any; // Base64 encoded image
+}
+
+export interface ImageToVideoNodeData {
+  label?: string;
+  images?: string[]; // Array of base64 encoded images
+  audioBase64?: string; // Optional base64 encoded audio
+  duration?: number; // Seconds per image
+  output?: any; // Base64 encoded video
+}
+
 export type NodeData =
   | InputNodeData
   | LLMTaskNodeData
@@ -84,6 +108,9 @@ export type NodeData =
   | StructuredOutputNodeData
   | EmbeddingGeneratorNodeData
   | SimilaritySearchNodeData
+  | TextToSpeechNodeData
+  | TextToImageNodeData
+  | ImageToVideoNodeData
   | OutputNodeData;
 
 // Workflow Node

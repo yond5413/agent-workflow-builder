@@ -49,6 +49,24 @@ const nodeTypes: NodeTypeInfo[] = [
     description: "Vector similarity search",
   },
   {
+    type: NodeType.TEXT_TO_SPEECH,
+    icon: "🔊",
+    label: "Text to Speech",
+    description: "Convert text to audio",
+  },
+  {
+    type: NodeType.TEXT_TO_IMAGE,
+    icon: "🎨",
+    label: "Text to Image",
+    description: "Generate images from text",
+  },
+  {
+    type: NodeType.IMAGE_TO_VIDEO,
+    icon: "🎬",
+    label: "Image to Video",
+    description: "Create video from images",
+  },
+  {
     type: NodeType.OUTPUT,
     icon: "📤",
     label: "Output",

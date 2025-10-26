@@ -13,6 +13,9 @@ import {
   StructuredOutputNodeData,
   EmbeddingGeneratorNodeData,
   SimilaritySearchNodeData,
+  TextToSpeechNodeData,
+  TextToImageNodeData,
+  ImageToVideoNodeData,
 } from "@/types/workflow";
 import { groupNodesByDepth } from "./validator";
 
@@ -171,6 +174,15 @@ export class WorkflowEngine {
           break;
         case NodeType.SIMILARITY_SEARCH:
           output = await this.executeSimilaritySearchNode(node, input);
+          break;
+        case NodeType.TEXT_TO_SPEECH:
+          output = await this.executeTextToSpeechNode(node, input);
+          break;
+        case NodeType.TEXT_TO_IMAGE:
+          output = await this.executeTextToImageNode(node, input);
+          break;
+        case NodeType.IMAGE_TO_VIDEO:
+          output = await this.executeImageToVideoNode(node, input);
           break;
         case NodeType.OUTPUT:
           output = await this.executeOutputNode(node, input);
@@ -501,6 +513,304 @@ export class WorkflowEngine {
         }`
       );
     }
+  }
+
+  /**
+   * Execute Text to Speech Node
+   */
+  private async executeTextToSpeechNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as TextToSpeechNodeData;
+    // Always interpolate the text to resolve template variables
+    const text = this.interpolateInput(nodeData.text || "", input);
+
+    if (!text) {
+      throw new Error("Text is required for text-to-speech");
+    }
+
+    const voiceId = nodeData.voiceId || "JBFqnCBsd6RMkjVDRZzb";
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/text-speech`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voiceId }),
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Text-to-speech failed");
+      }
+
+      // Convert audio buffer to base64
+      const audioBuffer = await response.arrayBuffer();
+      const base64Audio = `data:audio/mpeg;base64,${Buffer.from(audioBuffer).toString('base64')}`;
+
+      return { audioBase64: base64Audio, text };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Text-to-speech error: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Execute Text to Image Node
+   */
+  private async executeTextToImageNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as TextToImageNodeData;
+    // Always interpolate the prompt to resolve template variables
+    const prompt = this.interpolateInput(nodeData.prompt || "", input);
+
+    if (!prompt) {
+      throw new Error("Prompt is required for text-to-image");
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/text-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Text-to-image failed");
+      }
+
+      // Convert image buffer to base64
+      const imageBuffer = await response.arrayBuffer();
+      const base64Image = `data:image/jpeg;base64,${Buffer.from(imageBuffer).toString('base64')}`;
+
+      return { imageBase64: base64Image, prompt };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Text-to-image error: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Execute Image to Video Node
+   */
+  private async executeImageToVideoNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as ImageToVideoNodeData;
+    let images: string[] = nodeData.images || [];
+    let audioBase64 = nodeData.audioBase64;
+
+    // Handle multiple inputs from different nodes (Record format)
+    if (input && typeof input === 'object' && !Array.isArray(input)) {
+      // Check if it's a Record of node outputs (multiple connections)
+      const entries = Object.entries(input);
+      
+      // If we have multiple entries, it's likely a Record<nodeId, output>
+      if (entries.length > 0) {
+        const hasNodeIdKeys = entries.some(([key]) => 
+          key.includes('text-to-image') || key.includes('text-to-speech') || 
+          key.includes('text_to_image') || key.includes('text_to_speech')
+        );
+
+        if (hasNodeIdKeys) {
+          // Extract images and audio from the Record
+          for (const [nodeId, output] of entries) {
+            const outputData = output as any;
+            
+            // Check for image data
+            if (outputData.imageBase64) {
+              images.push(outputData.imageBase64);
+            } else if (outputData.data && typeof outputData.data === 'string') {
+              // Handle if data is directly the base64 string
+              images.push(outputData.data);
+            } else if (outputData.images && Array.isArray(outputData.images)) {
+              images.push(...outputData.images);
+            }
+            
+            // Check for audio data
+            if (outputData.audioBase64 && !audioBase64) {
+              audioBase64 = outputData.audioBase64;
+            }
+          }
+        } else {
+          // Not a Record format, handle as before
+          if (input.imageBase64) {
+            images = [input.imageBase64];
+          } else if (input.images && Array.isArray(input.images)) {
+            images = input.images;
+          }
+          if (input.audioBase64 && !audioBase64) {
+            audioBase64 = input.audioBase64;
+          }
+        }
+      }
+    } 
+    // Handle array input (multiple images from one node)
+    else if (Array.isArray(input)) {
+      images = input.map((item: any) => 
+        typeof item === 'string' ? item : item.imageBase64 || item.data
+      ).filter(Boolean);
+    }
+    // Handle single input object
+    else if (input) {
+      if (input.imageBase64) {
+        images = [input.imageBase64];
+      } else if (input.images && Array.isArray(input.images)) {
+        images = input.images;
+      }
+      if (input.audioBase64 && !audioBase64) {
+        audioBase64 = input.audioBase64;
+      }
+    }
+
+    // Validate we have images
+    if (images.length === 0) {
+      throw new Error("At least one image is required for video creation");
+    }
+
+    // Process video client-side instead of API call
+    try {
+      const videoBase64 = await this.createVideoClientSide(images, audioBase64);
+      
+      return { 
+        videoBase64, 
+        imageCount: images.length, 
+        hasAudio: !!audioBase64 
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Image-to-video error: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Create video client-side using FFmpeg WASM
+   */
+  private async createVideoClientSide(
+    images: string[], 
+    audioBase64?: string
+  ): Promise<string> {
+    // Check if we're in browser environment
+    if (typeof window === 'undefined') {
+      throw new Error('Video creation must run in browser environment');
+    }
+
+    this.log("info", "Loading FFmpeg WASM...");
+
+    // Dynamic import to ensure browser-only execution
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { toBlobURL } = await import('@ffmpeg/util');
+
+    const ffmpeg = new FFmpeg();
+    
+    // Set up logging
+    ffmpeg.on('log', ({ message }) => {
+      console.log('[FFmpeg]', message);
+    });
+
+    ffmpeg.on('progress', ({ progress }) => {
+      this.log("info", `Video processing: ${Math.round(progress * 100)}%`);
+    });
+
+    // Load FFmpeg core
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+
+    this.log("info", "FFmpeg loaded, processing video...");
+
+    // Write images to virtual filesystem
+    for (let i = 0; i < images.length; i++) {
+      const base64Data = images[i].replace(/^data:image\/\w+;base64,/, '');
+      // Convert base64 to Uint8Array
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let j = 0; j < binaryString.length; j++) {
+        bytes[j] = binaryString.charCodeAt(j);
+      }
+      await ffmpeg.writeFile(`img${i}.png`, bytes);
+    }
+
+    // Write audio if provided
+    if (audioBase64) {
+      const audioData = audioBase64.replace(/^data:audio\/\w+;base64,/, '');
+      const binaryString = atob(audioData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let j = 0; j < binaryString.length; j++) {
+        bytes[j] = binaryString.charCodeAt(j);
+      }
+      await ffmpeg.writeFile('audio.mp3', bytes);
+    }
+
+    // Create concat file for slideshow (3 seconds per image)
+    const concatList = images
+      .map((_, i) => `file 'img${i}.png'\nduration 3`)
+      .join('\n') + `\nfile 'img${images.length - 1}.png'`;
+    await ffmpeg.writeFile('input.txt', new TextEncoder().encode(concatList));
+
+    // Build FFmpeg command arguments
+    const args = [
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', 'input.txt'
+    ];
+
+    // Add audio input if provided (must be before output options)
+    if (audioBase64) {
+      args.push('-i', 'audio.mp3');
+    }
+
+    // Add output options (video filters, codecs, etc.)
+    args.push(
+      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30',
+      '-c:v', 'libx264',
+      '-preset', 'ultrafast',
+      '-pix_fmt', 'yuv420p'
+    );
+
+    // Add audio encoding options if audio was provided
+    if (audioBase64) {
+      args.push('-c:a', 'aac');
+      args.push('-b:a', '192k');
+      args.push('-shortest'); // Stop when shortest stream ends
+    }
+
+    args.push('output.mp4');
+
+    // Execute FFmpeg
+    await ffmpeg.exec(args);
+
+    this.log("info", "Video processing complete, converting to base64...");
+
+    // Read output file
+    const data = await ffmpeg.readFile('output.mp4') as Uint8Array;
+    
+    // Convert to blob and then to base64
+    const blob = new Blob([new Uint8Array(data)], { type: 'video/mp4' });
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        resolve(base64);
+      };
+      reader.onerror = () => reject(new Error('Failed to convert video to base64'));
+      reader.readAsDataURL(blob);
+    });
   }
 
   /**

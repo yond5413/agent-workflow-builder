@@ -17,6 +17,9 @@ import { WebScraperNode } from "./nodes/WebScraperNode";
 import { StructuredOutputNode } from "./nodes/StructuredOutputNode";
 import { EmbeddingGeneratorNode } from "./nodes/EmbeddingGeneratorNode";
 import { SimilaritySearchNode } from "./nodes/SimilaritySearchNode";
+import { TextToSpeechNode } from "./nodes/TextToSpeechNode";
+import { TextToImageNode } from "./nodes/TextToImageNode";
+import { ImageToVideoNode } from "./nodes/ImageToVideoNode";
 import { OutputNode } from "./nodes/OutputNode";
 import { NodeType } from "@/types/workflow";
 
@@ -27,6 +30,9 @@ const nodeTypes: NodeTypes = {
   [NodeType.STRUCTURED_OUTPUT]: StructuredOutputNode,
   [NodeType.EMBEDDING_GENERATOR]: EmbeddingGeneratorNode,
   [NodeType.SIMILARITY_SEARCH]: SimilaritySearchNode,
+  [NodeType.TEXT_TO_SPEECH]: TextToSpeechNode,
+  [NodeType.TEXT_TO_IMAGE]: TextToImageNode,
+  [NodeType.IMAGE_TO_VIDEO]: ImageToVideoNode,
   [NodeType.OUTPUT]: OutputNode,
 };
 

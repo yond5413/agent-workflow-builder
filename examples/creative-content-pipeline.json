@@ -1,0 +1,181 @@
+{
+  "id": "workflow-creative-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "Story Topic",
+        "payload": "A robot learning to paint"
+      },
+      "position": {
+        "x": 100,
+        "y": 300
+      }
+    },
+    {
+      "id": "llm_task-1",
+      "type": "llm_task",
+      "data": {
+        "label": "Generate Short Story",
+        "prompt": "Write a 3-sentence story about: {{input}}",
+        "model": "openai/gpt-oss-20b:free",
+        "temperature": 0.8,
+        "max_tokens": 200
+      },
+      "position": {
+        "x": 350,
+        "y": 300
+      }
+    },
+    {
+      "id": "text_to_speech-2",
+      "type": "text_to_speech",
+      "data": {
+        "label": "Narrate Story",
+        "text": "{{input}}",
+        "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+      },
+      "position": {
+        "x": 600,
+        "y": 200
+      }
+    },
+    {
+      "id": "llm_task-3",
+      "type": "llm_task",
+      "data": {
+        "label": "Generate Scene Descriptions",
+        "prompt": "Based on this story: {{input}}\n\nGenerate 3 short, visual scene descriptions (one per line) that could be used as image prompts.",
+        "model": "openai/gpt-oss-20b:free",
+        "temperature": 0.7,
+        "max_tokens": 150
+      },
+      "position": {
+        "x": 600,
+        "y": 400
+      }
+    },
+    {
+      "id": "text_to_image-4",
+      "type": "text_to_image",
+      "data": {
+        "label": "Generate Scene 1",
+        "prompt": "{{input}}"
+      },
+      "position": {
+        "x": 850,
+        "y": 250
+      }
+    },
+    {
+      "id": "text_to_image-5",
+      "type": "text_to_image",
+      "data": {
+        "label": "Generate Scene 2",
+        "prompt": "{{input}}"
+      },
+      "position": {
+        "x": 850,
+        "y": 400
+      }
+    },
+    {
+      "id": "text_to_image-6",
+      "type": "text_to_image",
+      "data": {
+        "label": "Generate Scene 3",
+        "prompt": "{{input}}"
+      },
+      "position": {
+        "x": 850,
+        "y": 550
+      }
+    },
+    {
+      "id": "image_to_video-8",
+      "type": "image_to_video",
+      "data": {
+        "label": "Compose Video"
+      },
+      "position": {
+        "x": 1100,
+        "y": 400
+      }
+    },
+    {
+      "id": "output-7",
+      "type": "output",
+      "data": {
+        "label": "Final Content Package"
+      },
+      "position": {
+        "x": 1350,
+        "y": 400
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "llm_task-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "llm_task-1",
+      "target": "text_to_speech-2"
+    },
+    {
+      "id": "edge-1-3",
+      "source": "llm_task-1",
+      "target": "llm_task-3"
+    },
+    {
+      "id": "edge-3-4",
+      "source": "llm_task-3",
+      "target": "text_to_image-4"
+    },
+    {
+      "id": "edge-3-5",
+      "source": "llm_task-3",
+      "target": "text_to_image-5"
+    },
+    {
+      "id": "edge-3-6",
+      "source": "llm_task-3",
+      "target": "text_to_image-6"
+    },
+    {
+      "id": "edge-2-8",
+      "source": "text_to_speech-2",
+      "target": "image_to_video-8"
+    },
+    {
+      "id": "edge-4-8",
+      "source": "text_to_image-4",
+      "target": "image_to_video-8"
+    },
+    {
+      "id": "edge-5-8",
+      "source": "text_to_image-5",
+      "target": "image_to_video-8"
+    },
+    {
+      "id": "edge-6-8",
+      "source": "text_to_image-6",
+      "target": "image_to_video-8"
+    },
+    {
+      "id": "edge-8-7",
+      "source": "image_to_video-8",
+      "target": "output-7"
+    }
+  ],
+  "metadata": {
+    "name": "Creative Content Pipeline",
+    "description": "Advanced workflow that generates a story, creates narration, generates scene images, and composes them into a video",
+    "created_at": "2025-10-25T00:00:00Z"
+  }
+}
+

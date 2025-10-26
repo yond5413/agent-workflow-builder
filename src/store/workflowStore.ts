@@ -96,6 +96,9 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       [NodeType.STRUCTURED_OUTPUT]: { label: "Structured Output", schema: "{}", model: "z-ai/glm-4.5-air:free" },
       [NodeType.EMBEDDING_GENERATOR]: { label: "Embedding Generator", model: "embed-english-v3.0", inputType: "search_document" },
       [NodeType.SIMILARITY_SEARCH]: { label: "Similarity Search", collectionName: "", topK: 5, scoreThreshold: 0.7 },
+      [NodeType.TEXT_TO_SPEECH]: { label: "Text to Speech", text: "", voiceId: "JBFqnCBsd6RMkjVDRZzb" },
+      [NodeType.TEXT_TO_IMAGE]: { label: "Text to Image", prompt: "" },
+      [NodeType.IMAGE_TO_VIDEO]: { label: "Image to Video", images: [], duration: 3 },
       [NodeType.OUTPUT]: { label: "Output" },
     };
 

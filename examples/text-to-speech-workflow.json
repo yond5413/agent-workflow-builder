@@ -1,0 +1,59 @@
+{
+  "id": "workflow-tts-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "Text Input",
+        "payload": "Welcome to the agent workflow builder. This is a demonstration of text to speech conversion."
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "text_to_speech-1",
+      "type": "text_to_speech",
+      "data": {
+        "label": "Generate Audio",
+        "text": "{{input}}",
+        "voiceId": "JBFqnCBsd6RMkjVDRZzb"
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Audio Output"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "text_to_speech-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "text_to_speech-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Text to Speech Workflow",
+    "description": "A simple workflow that converts text input to speech audio using ElevenLabs API",
+    "created_at": "2025-10-25T00:00:00Z"
+  }
+}
+

@@ -1,0 +1,58 @@
+{
+  "id": "workflow-tti-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "Image Prompt",
+        "payload": "A serene mountain landscape at sunset with vibrant orange and purple skies"
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "text_to_image-1",
+      "type": "text_to_image",
+      "data": {
+        "label": "Generate Image",
+        "prompt": "{{input}}"
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Image Output"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "text_to_image-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "text_to_image-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Text to Image Workflow",
+    "description": "A simple workflow that generates an image from a text prompt using Cloudflare AI",
+    "created_at": "2025-10-25T00:00:00Z"
+  }
+}
+

@@ -205,6 +205,24 @@ const validateSimilaritySearchNode: NodeValidator = (node) => {
   return errors;
 };
 
+const validateTextToSpeechNode: NodeValidator = () => {
+  // Text-to-speech nodes can work with input from previous nodes
+  // No strict validation needed
+  return [];
+};
+
+const validateTextToImageNode: NodeValidator = () => {
+  // Text-to-image nodes can work with input from previous nodes
+  // No strict validation needed
+  return [];
+};
+
+const validateImageToVideoNode: NodeValidator = () => {
+  // Image-to-video nodes can work with input from previous nodes
+  // No strict validation needed
+  return [];
+};
+
 const validateOutputNode: NodeValidator = () => {
   // Output nodes are valid with minimal config
   return [];
@@ -218,6 +236,9 @@ const NODE_VALIDATORS: Record<NodeType, NodeValidator> = {
   [NodeType.STRUCTURED_OUTPUT]: validateStructuredOutputNode,
   [NodeType.EMBEDDING_GENERATOR]: validateEmbeddingGeneratorNode,
   [NodeType.SIMILARITY_SEARCH]: validateSimilaritySearchNode,
+  [NodeType.TEXT_TO_SPEECH]: validateTextToSpeechNode,
+  [NodeType.TEXT_TO_IMAGE]: validateTextToImageNode,
+  [NodeType.IMAGE_TO_VIDEO]: validateImageToVideoNode,
   [NodeType.OUTPUT]: validateOutputNode,
 };
 
