@@ -86,9 +86,10 @@ export function ConfigPanel() {
                 <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
                 <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
                 <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
-                <option value="amoonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
+                <option value="moonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
                 <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
                 <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
+                <option value="meituan/longcat-flash-chat:free">Longcat-flash-chat</option>
               </select>
             </div>
             <div>
@@ -167,9 +168,10 @@ export function ConfigPanel() {
                 <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
                 <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
                 <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
-                <option value="amoonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
+                <option value="moonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
                 <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
                 <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
+                <option value="meituan/longcat-flash-chat:free">Longcat-flash-chat</option>
               </select>
             </div>
           </>
