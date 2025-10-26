@@ -188,6 +188,7 @@ export interface WorkflowExecutionResult {
   results: Record<string, NodeExecutionResult>;
   logs: ExecutionLog[];
   error?: string;
+  validationErrors?: ValidationError[];
 }
 
 // Validation Result
