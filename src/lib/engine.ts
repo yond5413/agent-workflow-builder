@@ -756,18 +756,36 @@ export class WorkflowEngine {
       await ffmpeg.writeFile('audio.mp3', bytes);
     }
 
-    // Create concat file for slideshow (3 seconds per image)
+    // Calculate duration per image to match audio length
+    let durationPerImage = 3; // Default 3 seconds per image
+    
+    if (audioBase64) {
+      // Get audio duration by creating a temporary audio element
+      // For now, distribute evenly: if we have audio, show each image longer
+      // Assuming typical TTS is ~2-3 seconds per sentence, and we have 3 images
+      // We'll use loop to repeat images until audio ends
+      durationPerImage = 3; // Keep at 3 seconds, we'll loop the video
+    }
+
+    // Create concat file for slideshow
     const concatList = images
-      .map((_, i) => `file 'img${i}.png'\nduration 3`)
+      .map((_, i) => `file 'img${i}.png'\nduration ${durationPerImage}`)
       .join('\n') + `\nfile 'img${images.length - 1}.png'`;
     await ffmpeg.writeFile('input.txt', new TextEncoder().encode(concatList));
 
     // Build FFmpeg command arguments
-    const args = [
+    const args = [];
+    
+    // Add video input with loop if we have audio
+    if (audioBase64) {
+      args.push('-stream_loop', '-1'); // Loop video indefinitely
+    }
+    
+    args.push(
       '-f', 'concat',
       '-safe', '0',
       '-i', 'input.txt'
-    ];
+    );
 
     // Add audio input if provided (must be before output options)
     if (audioBase64) {
@@ -786,7 +804,7 @@ export class WorkflowEngine {
     if (audioBase64) {
       args.push('-c:a', 'aac');
       args.push('-b:a', '192k');
-      args.push('-shortest'); // Stop when shortest stream ends
+      args.push('-shortest'); // Stop when audio (shortest after looping) ends
     }
 
     args.push('output.mp4');
@@ -908,13 +926,14 @@ export class WorkflowEngine {
   /**
    * Add a log entry
    */
+  private logCounter = 0;
   private log(
     level: "info" | "success" | "error" | "warning",
     message: string,
     nodeId?: string
   ) {
     const log: ExecutionLog = {
-      id: `log-${Date.now()}-${Math.random()}`,
+      id: `log-${Date.now()}-${this.logCounter++}`,
       timestamp: Date.now(),
       nodeId,
       level,
