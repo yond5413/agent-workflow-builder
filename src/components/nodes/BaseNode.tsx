@@ -48,7 +48,7 @@ export function BaseNode({
   return (
     <div
       className={`
-        relative rounded-lg border-2 p-4 min-w-[200px] max-w-[300px]
+        relative rounded-lg border-2 p-4 min-w-[200px] max-w-[300px] w-full overflow-hidden
         ${stateColors[executionState]}
         ${selected ? "ring-2 ring-blue-400" : ""}
         transition-all shadow-md

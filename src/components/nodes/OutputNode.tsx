@@ -76,7 +76,6 @@ export function OutputNode({ id, data, selected }: NodeProps) {
       icon="📤"
       title="Output"
     >
-      <p className="text-gray-600 text-sm mb-2">Final workflow output</p>
       {hasOutput ? (
         <div className="space-y-2">
           {renderOutputPreview()}

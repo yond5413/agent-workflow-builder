@@ -46,3 +46,15 @@ body {
 .react-flow__attribution {
   display: none;
 }
+
+/* Make React Flow node wrapper transparent so our custom node card is the only visible surface */
+.react-flow__node {
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.react-flow__node:before {
+  display: none !important;
+}
