@@ -10,6 +10,7 @@ import {
   StructuredOutputNodeData,
   EmbeddingGeneratorNodeData,
   SimilaritySearchNodeData,
+  VectorStoreNodeData,
 } from "@/types/workflow";
 
 /**
@@ -205,6 +206,31 @@ const validateSimilaritySearchNode: NodeValidator = (node) => {
   return errors;
 };
 
+const validateVectorStoreNode: NodeValidator = (node) => {
+  const errors: ValidationError[] = [];
+  const vectorStoreData = node.data as VectorStoreNodeData;
+  
+  if (!vectorStoreData.collectionName) {
+    errors.push({
+      nodeId: node.id,
+      message: "Vector Store node requires a collection name",
+      type: "error",
+    });
+  }
+  
+  if (vectorStoreData.vectorSize !== undefined) {
+    if (vectorStoreData.vectorSize < 1 || vectorStoreData.vectorSize > 4096) {
+      errors.push({
+        nodeId: node.id,
+        message: "Vector size must be between 1 and 4096",
+        type: "error",
+      });
+    }
+  }
+  
+  return errors;
+};
+
 const validateTextToSpeechNode: NodeValidator = () => {
   // Text-to-speech nodes can work with input from previous nodes
   // No strict validation needed
@@ -241,6 +267,7 @@ const NODE_VALIDATORS: Record<NodeType, NodeValidator> = {
   [NodeType.STRUCTURED_OUTPUT]: validateStructuredOutputNode,
   [NodeType.EMBEDDING_GENERATOR]: validateEmbeddingGeneratorNode,
   [NodeType.SIMILARITY_SEARCH]: validateSimilaritySearchNode,
+  [NodeType.VECTOR_STORE]: validateVectorStoreNode,
   [NodeType.TEXT_TO_SPEECH]: validateTextToSpeechNode,
   [NodeType.TEXT_TO_IMAGE]: validateTextToImageNode,
   [NodeType.IMAGE_TO_VIDEO]: validateImageToVideoNode,

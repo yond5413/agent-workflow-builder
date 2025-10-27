@@ -411,7 +411,7 @@ export class WorkflowEngine {
     const inputType = nodeData.inputType || "search_document";
 
     // Use custom text if provided, otherwise extract from input
-    let text = nodeData.text || this.extractTextFromInput(input);
+    const text = nodeData.text || this.extractTextFromInput(input);
 
     if (!text) {
       throw new Error("No text available for embedding generation");
