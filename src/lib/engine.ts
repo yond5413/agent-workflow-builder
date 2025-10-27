@@ -12,6 +12,7 @@ import {
   WebScraperNodeData,
   StructuredOutputNodeData,
   EmbeddingGeneratorNodeData,
+  VectorStoreNodeData,
   SimilaritySearchNodeData,
   TextToSpeechNodeData,
   TextToImageNodeData,
@@ -33,6 +34,7 @@ export class WorkflowEngine {
   private onStateChange?: (nodeId: string, state: NodeExecutionState) => void;
   private onLog?: (log: ExecutionLog) => void;
   private baseUrl: string;
+  private instanceId: string;
 
   constructor(
     workflow: Workflow,
@@ -50,6 +52,8 @@ export class WorkflowEngine {
     this.onLog = callbacks?.onLog;
     // Use provided baseUrl or detect from environment
     this.baseUrl = callbacks?.baseUrl || this.getBaseUrl();
+    // Generate unique instance ID to prevent log ID collisions
+    this.instanceId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }
 
   /**
@@ -174,6 +178,9 @@ export class WorkflowEngine {
           break;
         case NodeType.EMBEDDING_GENERATOR:
           output = await this.executeEmbeddingNode(node, input);
+          break;
+        case NodeType.VECTOR_STORE:
+          output = await this.executeVectorStoreNode(node, input);
           break;
         case NodeType.SIMILARITY_SEARCH:
           output = await this.executeSimilaritySearchNode(node, input);
@@ -390,6 +397,10 @@ export class WorkflowEngine {
 
   /**
    * Execute Embedding Generator Node
+   * Supports:
+   * - Single text string
+   * - JSON array of strings
+   * - Double-newline separated documents (auto-splits into batch)
    */
   private async executeEmbeddingNode(
     node: WorkflowNode,
@@ -400,17 +411,50 @@ export class WorkflowEngine {
     const inputType = nodeData.inputType || "search_document";
 
     // Use custom text if provided, otherwise extract from input
-    const text = nodeData.text || this.extractTextFromInput(input);
+    let text = nodeData.text || this.extractTextFromInput(input);
 
     if (!text) {
       throw new Error("No text available for embedding generation");
+    }
+
+    // Determine if we should process as batch (multiple texts) or single text
+    let texts: string[] | null = null;
+
+    // Try to parse as JSON array
+    if (typeof text === "string" && text.trim().startsWith("[")) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.every(item => typeof item === "string")) {
+          texts = parsed;
+          this.log("info", `Processing ${texts.length} documents from JSON array`);
+        }
+      } catch {
+        // Not valid JSON, continue to other checks
+      }
+    }
+
+    // If not JSON array, check for double-newline separated documents
+    if (!texts && typeof text === "string" && text.includes("\n\n")) {
+      const chunks = text
+        .split("\n\n")
+        .map(chunk => chunk.trim())
+        .filter(chunk => chunk.length > 0);
+      
+      if (chunks.length > 1) {
+        texts = chunks;
+        this.log("info", `Auto-splitting into ${texts.length} documents (separated by double newlines)`);
+      }
     }
 
     try {
       const response = await fetch(`${this.baseUrl}/api/embedding`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, model, inputType }),
+        body: JSON.stringify({
+          ...(texts ? { texts } : { text }),
+          model,
+          inputType,
+        }),
         signal: this.abortController.signal,
       });
 
@@ -427,6 +471,7 @@ export class WorkflowEngine {
       return {
         ...result.data,
         vector: result.data.embeddings[0], // Extract first embedding for convenience
+        texts: texts || [text], // Include original texts for downstream nodes
       };
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
@@ -434,6 +479,122 @@ export class WorkflowEngine {
       }
       throw new Error(
         `Network error calling embedding API: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
+
+  /**
+   * Execute Vector Store Node
+   * Stores embeddings in Qdrant vector database
+   * Reference: https://qdrant.tech/documentation/concepts/points/
+   */
+  private async executeVectorStoreNode(
+    node: WorkflowNode,
+    input: any
+  ): Promise<any> {
+    const nodeData = node.data as VectorStoreNodeData;
+    const collectionName = nodeData.collectionName;
+    const vectorSize = nodeData.vectorSize || 1024;
+
+    if (!collectionName) {
+      throw new Error("Collection name is required for vector store");
+    }
+
+    // Extract embeddings from input
+    let embeddings: number[][] = [];
+    let sourceTexts: string[] = [];
+
+    if (input) {
+      if (input.embeddings && Array.isArray(input.embeddings)) {
+        // Input has embeddings array from embedding generator
+        embeddings = input.embeddings;
+        
+        // Try to get the original texts if available
+        if (input.texts && Array.isArray(input.texts)) {
+          sourceTexts = input.texts;
+        } else if (input.text) {
+          // Single text, use for all embeddings
+          sourceTexts = Array(embeddings.length).fill(input.text);
+        }
+      } else if (input.vector && Array.isArray(input.vector)) {
+        // Input has a single vector
+        embeddings = [input.vector];
+        const text = this.extractTextFromInput(input);
+        if (text) sourceTexts = [text];
+      } else if (Array.isArray(input)) {
+        // Input is directly an array of vectors
+        embeddings = input;
+      } else {
+        throw new Error(
+          "Input must contain embeddings, vector, or be an array of vectors"
+        );
+      }
+    }
+
+    if (embeddings.length === 0) {
+      throw new Error("No embeddings available to store");
+    }
+
+    this.log("info", `Storing ${embeddings.length} vectors in ${collectionName}`);
+
+    // Format points for Qdrant
+    // Each point needs: id (string/number), vector (number[]), payload (optional metadata)
+    // Using numeric IDs for better Qdrant compatibility
+    const baseId = Date.now() * 1000; // Milliseconds to microseconds for more uniqueness
+    const points = embeddings.map((vector, index) => {
+      const pointId = baseId + index; // Numeric ID
+      const payload: Record<string, any> = {
+        timestamp: new Date().toISOString(),
+        index,
+      };
+
+      // Add source text if available
+      if (sourceTexts[index]) {
+        payload.text = sourceTexts[index];
+      }
+
+      return {
+        id: pointId,
+        vector,
+        payload,
+      };
+    });
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/vector-store`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          collectionName,
+          points,
+          vectorSize,
+        }),
+        signal: this.abortController.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Vector storage failed");
+      }
+
+      return {
+        ...result.data,
+        pointsStored: points.length,
+        collectionName,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Vector storage was cancelled");
+      }
+      throw new Error(
+        `Network error calling vector-store API: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );
@@ -1024,7 +1185,7 @@ export class WorkflowEngine {
     nodeId?: string
   ) {
     const log: ExecutionLog = {
-      id: `log-${Date.now()}-${this.logCounter++}`,
+      id: `log-${this.instanceId}-${this.logCounter++}`,
       timestamp: Date.now(),
       nodeId,
       level,

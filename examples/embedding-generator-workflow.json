@@ -1,0 +1,59 @@
+{
+  "id": "workflow-embedding-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "Text Input",
+        "payload": "Machine learning is a subset of artificial intelligence that focuses on the development of algorithms and statistical models that enable computers to perform tasks without explicit instructions. It relies on patterns and inference instead."
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "embedding_generator-1",
+      "type": "embedding_generator",
+      "data": {
+        "label": "Generate Embeddings",
+        "model": "embed-english-v3.0",
+        "inputType": "search_document"
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Embedding Output"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "embedding_generator-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "embedding_generator-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Embedding Generator Demo",
+    "description": "Demonstrates text-to-vector embedding conversion using Cohere API",
+    "created_at": "2025-10-27T00:00:00Z"
+  }
+}
+

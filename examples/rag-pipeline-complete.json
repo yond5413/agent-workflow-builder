@@ -1,0 +1,80 @@
+{
+  "id": "workflow-rag-complete-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "User Question",
+        "payload": "I forgot my password and need to reset it. Can you help?"
+      },
+      "position": {
+        "x": 100,
+        "y": 250
+      }
+    },
+    {
+      "id": "similarity_search-1",
+      "type": "similarity_search",
+      "data": {
+        "label": "Retrieve Context",
+        "collectionName": "faq_collection",
+        "topK": 2,
+        "scoreThreshold": 0.5
+      },
+      "position": {
+        "x": 400,
+        "y": 250
+      }
+    },
+    {
+      "id": "llm_task-2",
+      "type": "llm_task",
+      "data": {
+        "label": "Generate Answer",
+        "prompt": "You are a helpful customer support assistant. Based on the following context from our knowledge base, provide a clear and helpful answer to the user's question.\n\nContext: {{input}}\n\nProvide a concise, actionable response.",
+        "model": "openai/gpt-oss-20b:free",
+        "temperature": 0.7,
+        "max_tokens": 300
+      },
+      "position": {
+        "x": 700,
+        "y": 250
+      }
+    },
+    {
+      "id": "output-3",
+      "type": "output",
+      "data": {
+        "label": "AI Response"
+      },
+      "position": {
+        "x": 1000,
+        "y": 250
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "similarity_search-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "similarity_search-1",
+      "target": "llm_task-2"
+    },
+    {
+      "id": "edge-2-3",
+      "source": "llm_task-2",
+      "target": "output-3"
+    }
+  ],
+  "metadata": {
+    "name": "RAG Pipeline Complete",
+    "description": "Complete Retrieval Augmented Generation workflow: retrieve context from vector store and generate informed responses",
+    "created_at": "2025-10-27T00:00:00Z"
+  }
+}
+

@@ -5,6 +5,7 @@ export enum NodeType {
   WEB_SCRAPER = "web_scraper",
   STRUCTURED_OUTPUT = "structured_output",
   EMBEDDING_GENERATOR = "embedding_generator",
+  VECTOR_STORE = "vector_store",
   SIMILARITY_SEARCH = "similarity_search",
   TEXT_TO_SPEECH = "text_to_speech",
   TEXT_TO_IMAGE = "text_to_image",
@@ -72,6 +73,13 @@ export interface EmbeddingGeneratorNodeData {
   output?: any;
 }
 
+export interface VectorStoreNodeData {
+  label?: string;
+  collectionName?: string;
+  vectorSize?: number; // Default 1024 for Cohere embeddings
+  output?: any;
+}
+
 export interface SimilaritySearchNodeData {
   label?: string;
   collectionName?: string;
@@ -126,6 +134,7 @@ export type NodeData =
   | WebScraperNodeData
   | StructuredOutputNodeData
   | EmbeddingGeneratorNodeData
+  | VectorStoreNodeData
   | SimilaritySearchNodeData
   | TextToSpeechNodeData
   | TextToImageNodeData

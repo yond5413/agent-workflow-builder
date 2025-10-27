@@ -1,0 +1,77 @@
+{
+  "id": "workflow-kb-builder-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "FAQ Documents",
+        "payload": "How do I reset my password? Go to Settings > Security > Reset Password and follow the instructions.\n\nHow do I contact support? Email us at support@example.com or use the live chat feature in the bottom right corner.\n\nWhat payment methods do you accept? We accept credit cards, PayPal, and bank transfers for enterprise customers.\n\nHow do I upgrade my account? Navigate to Account Settings > Subscription and choose your desired plan."
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "embedding_generator-1",
+      "type": "embedding_generator",
+      "data": {
+        "label": "Generate Embeddings",
+        "model": "embed-english-v3.0",
+        "inputType": "search_document"
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "vector_store-2",
+      "type": "vector_store",
+      "data": {
+        "label": "Store in Qdrant",
+        "collectionName": "faq_collection",
+        "vectorSize": 1024
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-3",
+      "type": "output",
+      "data": {
+        "label": "Storage Confirmation"
+      },
+      "position": {
+        "x": 1000,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "embedding_generator-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "embedding_generator-1",
+      "target": "vector_store-2"
+    },
+    {
+      "id": "edge-2-3",
+      "source": "vector_store-2",
+      "target": "output-3"
+    }
+  ],
+  "metadata": {
+    "name": "Knowledge Base Builder",
+    "description": "Build a searchable knowledge base by embedding and storing FAQ documents in Qdrant",
+    "created_at": "2025-10-27T00:00:00Z"
+  }
+}
+

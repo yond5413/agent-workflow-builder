@@ -43,6 +43,12 @@ const nodeTypes: NodeTypeInfo[] = [
     description: "Generate text embeddings",
   },
   {
+    type: NodeType.VECTOR_STORE,
+    icon: "🗄️",
+    label: "Vector Store",
+    description: "Store vectors in Qdrant",
+  },
+  {
     type: NodeType.SIMILARITY_SEARCH,
     icon: "🔍",
     label: "Similarity Search",

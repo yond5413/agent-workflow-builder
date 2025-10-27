@@ -16,6 +16,7 @@ import { LLMTaskNode } from "./nodes/LLMTaskNode";
 import { WebScraperNode } from "./nodes/WebScraperNode";
 import { StructuredOutputNode } from "./nodes/StructuredOutputNode";
 import { EmbeddingGeneratorNode } from "./nodes/EmbeddingGeneratorNode";
+import { VectorStoreNode } from "./nodes/VectorStoreNode";
 import { SimilaritySearchNode } from "./nodes/SimilaritySearchNode";
 import { TextToSpeechNode } from "./nodes/TextToSpeechNode";
 import { TextToImageNode } from "./nodes/TextToImageNode";
@@ -30,6 +31,7 @@ const nodeTypes: NodeTypes = {
   [NodeType.WEB_SCRAPER]: WebScraperNode,
   [NodeType.STRUCTURED_OUTPUT]: StructuredOutputNode,
   [NodeType.EMBEDDING_GENERATOR]: EmbeddingGeneratorNode,
+  [NodeType.VECTOR_STORE]: VectorStoreNode,
   [NodeType.SIMILARITY_SEARCH]: SimilaritySearchNode,
   [NodeType.TEXT_TO_SPEECH]: TextToSpeechNode,
   [NodeType.TEXT_TO_IMAGE]: TextToImageNode,

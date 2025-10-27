@@ -219,6 +219,47 @@ export function ConfigPanel() {
           </>
         )}
 
+        {selectedNode.type === NodeType.VECTOR_STORE && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Collection Name</label>
+              <input
+                type="text"
+                value={selectedNode.data.collectionName || ""}
+                onChange={(e) => handleDataChange("collectionName", e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="my_collection"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Name of the Qdrant collection. Will be created if it doesn&apos;t exist.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Vector Size: {selectedNode.data.vectorSize || 1024}
+              </label>
+              <input
+                type="number"
+                min="128"
+                max="4096"
+                step="128"
+                value={selectedNode.data.vectorSize || 1024}
+                onChange={(e) => handleDataChange("vectorSize", parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Dimension of the vectors. Cohere embed-english-v3.0 uses 1024.
+              </p>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <p className="text-xs text-blue-800">
+                <strong>Qdrant Integration:</strong> This node stores embeddings from the previous node into Qdrant. 
+                Ensure QDRANT_URL and QDRANT_API_KEY are configured.
+              </p>
+            </div>
+          </>
+        )}
+
         {selectedNode.type === NodeType.SIMILARITY_SEARCH && (
           <>
             <div>

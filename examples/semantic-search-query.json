@@ -1,0 +1,60 @@
+{
+  "id": "workflow-semantic-search-001",
+  "nodes": [
+    {
+      "id": "input-0",
+      "type": "input",
+      "data": {
+        "label": "User Query",
+        "payload": "How do I reset my password?"
+      },
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "similarity_search-1",
+      "type": "similarity_search",
+      "data": {
+        "label": "Search Knowledge Base",
+        "collectionName": "faq_collection",
+        "topK": 3,
+        "scoreThreshold": 0.5
+      },
+      "position": {
+        "x": 400,
+        "y": 200
+      }
+    },
+    {
+      "id": "output-2",
+      "type": "output",
+      "data": {
+        "label": "Search Results"
+      },
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-0-1",
+      "source": "input-0",
+      "target": "similarity_search-1"
+    },
+    {
+      "id": "edge-1-2",
+      "source": "similarity_search-1",
+      "target": "output-2"
+    }
+  ],
+  "metadata": {
+    "name": "Semantic Search Query",
+    "description": "Search the FAQ knowledge base using natural language queries with automatic embedding",
+    "created_at": "2025-10-27T00:00:00Z"
+  }
+}
+
