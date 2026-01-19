@@ -19,27 +19,35 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("[LLM API] Request body:", JSON.stringify(body, null, 2));
+
     const {
       prompt,
-      model = "openai/gpt-3.5-turbo",
+      messages,
+      model = "xiaomi/mimo-v2-flash:free",
       temperature = 0.7,
       max_tokens = 1000,
     } = body;
 
-    if (!prompt) {
-      return NextResponse.json(
-        { success: false, error: "Prompt is required" },
-        { status: 400 }
-      );
+    // Proper input handling: support both prompt and messages
+    let apiMessages = messages;
+
+    if (!apiMessages) {
+      if (!prompt) {
+        return NextResponse.json(
+          { success: false, error: "Either 'prompt' or 'messages' is required" },
+          { status: 400 }
+        );
+      }
+      apiMessages = [{ role: "user", content: prompt }];
     }
 
     let lastError: Error | null = null;
 
-    // Retry logic with exponential backoff
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout
 
         const response = await fetch(OPENROUTER_URL, {
           method: "POST",
@@ -50,7 +58,7 @@ export async function POST(request: NextRequest) {
           },
           body: JSON.stringify({
             model,
-            messages: [{ role: "user", content: prompt }],
+            messages: apiMessages,
             temperature,
             max_tokens,
           }),
@@ -61,16 +69,17 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            `OpenRouter API error (${response.status}): ${
-              errorData.error?.message || response.statusText
-            }`
-          );
+          const errorMessage = errorData.error?.message || response.statusText;
+
+          // Special handling for common errors
+          if (response.status === 401) throw new Error("Invalid OpenRouter API Key");
+          if (response.status === 429) throw new Error("Rate limit exceeded at OpenRouter");
+
+          throw new Error(`OpenRouter API error (${response.status}): ${errorMessage}`);
         }
 
         const result = await response.json();
-        const content =
-          result.choices?.[0]?.message?.content || "No response generated";
+        const content = result.choices?.[0]?.message?.content || "No response generated";
 
         return NextResponse.json({
           success: true,
@@ -83,22 +92,21 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
 
-        // Don't retry on abort or bad request errors
+        // Don't retry on abort, 400s, or auth errors
         if (
           lastError.name === "AbortError" ||
-          lastError.message.includes("(400)")
+          lastError.message.includes("(400)") ||
+          lastError.message.includes("401")
         ) {
           break;
         }
 
-        // Wait before retrying (exponential backoff)
         if (attempt < MAX_RETRIES - 1) {
           await sleep(RETRY_DELAY * Math.pow(2, attempt));
         }
       }
     }
 
-    // All retries failed
     return NextResponse.json(
       {
         success: false,
@@ -118,4 +126,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

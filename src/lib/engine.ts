@@ -239,7 +239,7 @@ export class WorkflowEngine {
   private async executeInputNode(node: WorkflowNode): Promise<any> {
     const nodeData = node.data as InputNodeData;
     const payload = nodeData.payload || nodeData.output;
-    
+
     if (!payload) {
       return { data: "" };
     }
@@ -261,7 +261,7 @@ export class WorkflowEngine {
   ): Promise<any> {
     const nodeData = node.data as LLMTaskNodeData;
     const prompt = this.interpolateInput(nodeData.prompt || "", input);
-    const model = nodeData.model || "openai/gpt-3.5-turbo";
+    const model = nodeData.model || "xiaomi/mimo-v2-flash:free";
     const temperature = nodeData.temperature || 0.7;
     const max_tokens = nodeData.max_tokens || 1000;
 
@@ -289,8 +289,7 @@ export class WorkflowEngine {
         throw new Error("LLM task was cancelled");
       }
       throw new Error(
-        `Network error calling LLM API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling LLM API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -332,8 +331,7 @@ export class WorkflowEngine {
         throw new Error("Web scraping was cancelled");
       }
       throw new Error(
-        `Network error calling scrape API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling scrape API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -348,7 +346,7 @@ export class WorkflowEngine {
   ): Promise<any> {
     const nodeData = node.data as StructuredOutputNodeData;
     const schemaStr = nodeData.schema;
-    const model = nodeData.model || "openai/gpt-3.5-turbo";
+    const model = nodeData.model || "xiaomi/mimo-v2-flash:free";
 
     if (!schemaStr) {
       throw new Error("Schema is required for structured output");
@@ -388,8 +386,7 @@ export class WorkflowEngine {
         throw new Error("Structured extraction was cancelled");
       }
       throw new Error(
-        `Network error calling structured extract API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling structured extract API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -439,7 +436,7 @@ export class WorkflowEngine {
         .split("\n\n")
         .map(chunk => chunk.trim())
         .filter(chunk => chunk.length > 0);
-      
+
       if (chunks.length > 1) {
         texts = chunks;
         this.log("info", `Auto-splitting into ${texts.length} documents (separated by double newlines)`);
@@ -478,8 +475,7 @@ export class WorkflowEngine {
         throw new Error("Embedding generation was cancelled");
       }
       throw new Error(
-        `Network error calling embedding API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling embedding API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -510,7 +506,7 @@ export class WorkflowEngine {
       if (input.embeddings && Array.isArray(input.embeddings)) {
         // Input has embeddings array from embedding generator
         embeddings = input.embeddings;
-        
+
         // Try to get the original texts if available
         if (input.texts && Array.isArray(input.texts)) {
           sourceTexts = input.texts;
@@ -594,8 +590,7 @@ export class WorkflowEngine {
         throw new Error("Vector storage was cancelled");
       }
       throw new Error(
-        `Network error calling vector-store API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling vector-store API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -675,8 +670,7 @@ export class WorkflowEngine {
         throw new Error("Similarity search was cancelled");
       }
       throw new Error(
-        `Network error calling similarity search API: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Network error calling similarity search API: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -781,11 +775,11 @@ export class WorkflowEngine {
     if (input && typeof input === 'object' && !Array.isArray(input)) {
       // Check if it's a Record of node outputs (multiple connections)
       const entries = Object.entries(input);
-      
+
       // If we have multiple entries, it's likely a Record<nodeId, output>
       if (entries.length > 0) {
-        const hasNodeIdKeys = entries.some(([key]) => 
-          key.includes('text-to-image') || key.includes('text-to-speech') || 
+        const hasNodeIdKeys = entries.some(([key]) =>
+          key.includes('text-to-image') || key.includes('text-to-speech') ||
           key.includes('text_to_image') || key.includes('text_to_speech')
         );
 
@@ -793,7 +787,7 @@ export class WorkflowEngine {
           // Extract images and audio from the Record
           for (const [nodeId, output] of entries) {
             const outputData = output as any;
-            
+
             // Check for image data
             if (outputData.imageBase64) {
               images.push(outputData.imageBase64);
@@ -803,7 +797,7 @@ export class WorkflowEngine {
             } else if (outputData.images && Array.isArray(outputData.images)) {
               images.push(...outputData.images);
             }
-            
+
             // Check for audio data
             if (outputData.audioBase64 && !audioBase64) {
               audioBase64 = outputData.audioBase64;
@@ -821,10 +815,10 @@ export class WorkflowEngine {
           }
         }
       }
-    } 
+    }
     // Handle array input (multiple images from one node)
     else if (Array.isArray(input)) {
-      images = input.map((item: any) => 
+      images = input.map((item: any) =>
         typeof item === 'string' ? item : item.imageBase64 || item.data
       ).filter(Boolean);
     }
@@ -848,11 +842,11 @@ export class WorkflowEngine {
     // Process video client-side instead of API call
     try {
       const videoBase64 = await this.createVideoClientSide(images, audioBase64);
-      
-      return { 
-        videoBase64, 
-        imageCount: images.length, 
-        hasAudio: !!audioBase64 
+
+      return {
+        videoBase64,
+        imageCount: images.length,
+        hasAudio: !!audioBase64
       };
     } catch (error) {
       if (error instanceof Error) {
@@ -921,7 +915,7 @@ export class WorkflowEngine {
     const finalName = baseName.replace('{timestamp}', timestamp).replace('..', '.');
 
     if (format === 'csv') {
-      const columns = nodeData.columns || ["id","inputText","summary","model","createdAt"];
+      const columns = nodeData.columns || ["id", "inputText", "summary", "model", "createdAt"];
       const row: Record<string, any> = {
         id,
         inputText: transcript,
@@ -951,7 +945,7 @@ export class WorkflowEngine {
    * Create video client-side using FFmpeg WASM
    */
   private async createVideoClientSide(
-    images: string[], 
+    images: string[],
     audioBase64?: string
   ): Promise<string> {
     // Check if we're in browser environment
@@ -966,7 +960,7 @@ export class WorkflowEngine {
     const { toBlobURL } = await import('@ffmpeg/util');
 
     const ffmpeg = new FFmpeg();
-    
+
     // Set up logging
     ffmpeg.on('log', ({ message }) => {
       console.log('[FFmpeg]', message);
@@ -1010,7 +1004,7 @@ export class WorkflowEngine {
 
     // Calculate duration per image to match audio length
     let durationPerImage = 3; // Default 3 seconds per image
-    
+
     if (audioBase64) {
       // Get audio duration by creating a temporary audio element
       // For now, distribute evenly: if we have audio, show each image longer
@@ -1027,12 +1021,12 @@ export class WorkflowEngine {
 
     // Build FFmpeg command arguments
     const args = [];
-    
+
     // Add video input with loop if we have audio
     if (audioBase64) {
       args.push('-stream_loop', '-1'); // Loop video indefinitely
     }
-    
+
     args.push(
       '-f', 'concat',
       '-safe', '0',
@@ -1068,10 +1062,10 @@ export class WorkflowEngine {
 
     // Read output file
     const data = await ffmpeg.readFile('output.mp4') as Uint8Array;
-    
+
     // Convert to blob and then to base64
     const blob = new Blob([new Uint8Array(data)], { type: 'video/mp4' });
-    
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -1134,12 +1128,12 @@ export class WorkflowEngine {
   private extractTextFromInput(input: any): string {
     if (!input) return "";
     if (typeof input === "string") return input;
-    
+
     // Try common text fields
     if (input.text) return input.text;
     if (input.content) return input.content;
     if (input.markdown) return input.markdown;
-    
+
     // Handle data field
     if (input.data) {
       if (typeof input.data === "string") return input.data;
@@ -1150,11 +1144,11 @@ export class WorkflowEngine {
       }
       return JSON.stringify(input.data);
     }
-    
+
     // Fallback: stringify the input, but truncate if too large
     const stringified = JSON.stringify(input);
     const MAX_LENGTH = 50000; // Reasonable limit for LLM context
-    
+
     if (stringified.length > MAX_LENGTH) {
       this.log(
         "warning",
@@ -1162,7 +1156,7 @@ export class WorkflowEngine {
       );
       return stringified.substring(0, MAX_LENGTH) + "... [truncated]";
     }
-    
+
     return stringified;
   }
 

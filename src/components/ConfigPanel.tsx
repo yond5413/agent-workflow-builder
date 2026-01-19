@@ -79,17 +79,19 @@ export function ConfigPanel() {
             <div>
               <label className="block text-sm font-medium mb-1">Model</label>
               <select
-                value={selectedNode.data.model || "z-ai/glm-4.5-air:free"}
+                value={selectedNode.data.model || "xiaomi/mimo-v2-flash:free"}
                 onChange={(e) => handleDataChange("model", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
-                <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
+                <option value="xiaomi/mimo-v2-flash:free">Xiaomi MIMO-V2 (Free)</option>
+                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR (Free)</option>
+                <option value="deepseek/deepseek-r1:free">Deepseek-R1 (Free)</option>
+                <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
                 <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
                 <option value="moonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
-                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
-                <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
-                <option value="meituan/longcat-flash-chat:free">Longcat-flash-chat</option>
+                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch</option>
+                <option value="qwen/qwen3-14b:free">Qwen-3 14B</option>
+                <option value="meituan/longcat-flash-chat:free">Longcat Flash</option>
               </select>
             </div>
             <div>
@@ -161,17 +163,19 @@ export function ConfigPanel() {
             <div>
               <label className="block text-sm font-medium mb-1">Model</label>
               <select
-                value={selectedNode.data.model || "openai/gpt-oss-20b:free"}
+                value={selectedNode.data.model || "xiaomi/mimo-v2-flash:free"}
                 onChange={(e) => handleDataChange("model", e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR</option>
-                <option value="deepseek/deepseek-r1:free">Deepseek-R1</option>
+                <option value="xiaomi/mimo-v2-flash:free">Xiaomi MIMO-V2 (Free)</option>
+                <option value="z-ai/glm-4.5-air:free">GLM-4.5-AIR (Free)</option>
+                <option value="deepseek/deepseek-r1:free">Deepseek-R1 (Free)</option>
+                <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
                 <option value="openai/gpt-oss-20b:free">GPT-OSS-20B</option>
                 <option value="moonshotai/kimi-dev-72b:free">Kimi-Dev-72B</option>
-                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch-30B-A3B</option>
-                <option value="qwen/qwen3-14b:free">Qwen-3.14B</option>
-                <option value="meituan/longcat-flash-chat:free">Longcat-flash-chat</option>
+                <option value="alibaba/tongyi-deepresearch-30b-a3b:free">Tongyi-Deepresearch</option>
+                <option value="qwen/qwen3-14b:free">Qwen-3 14B</option>
+                <option value="meituan/longcat-flash-chat:free">Longcat Flash</option>
               </select>
             </div>
           </>
@@ -253,7 +257,7 @@ export function ConfigPanel() {
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <p className="text-xs text-blue-800">
-                <strong>Qdrant Integration:</strong> This node stores embeddings from the previous node into Qdrant. 
+                <strong>Qdrant Integration:</strong> This node stores embeddings from the previous node into Qdrant.
                 Ensure QDRANT_URL and QDRANT_API_KEY are configured.
               </p>
             </div>
@@ -360,7 +364,7 @@ export function ConfigPanel() {
                 <label className="block text-sm font-medium mb-1">CSV Columns (comma-separated)</label>
                 <input
                   type="text"
-                  value={(selectedNode.data.columns || ["id","inputText","summary","model","createdAt"]).join(',')}
+                  value={(selectedNode.data.columns || ["id", "inputText", "summary", "model", "createdAt"]).join(',')}
                   onChange={(e) => handleDataChange("columns", e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   placeholder="id,inputText,summary,model,createdAt"

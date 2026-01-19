@@ -51,7 +51,7 @@ export default function Home() {
     try {
       // Dynamic import to ensure client-side execution
       const { WorkflowEngine } = await import("@/lib/engine");
-      
+
       const engine = new WorkflowEngine(workflow, {
         onStateChange: (nodeId, state) => {
           setNodeExecutionState(nodeId, state);
@@ -61,7 +61,7 @@ export default function Home() {
         },
         baseUrl: window.location.origin,
       });
-      
+
       // Store engine reference for cancellation
       setEngineRef(engine);
 
@@ -69,7 +69,7 @@ export default function Home() {
 
       if (result.success) {
         setExecutionStatus(WorkflowExecutionStatus.COMPLETED);
-        
+
         // Update node outputs and states
         Object.entries(result.results).forEach(([nodeId, nodeResult]: [string, any]) => {
           if (nodeResult.success) {
@@ -80,7 +80,7 @@ export default function Home() {
           }
         });
 
-        
+
 
         addLog({
           id: `final-${Date.now()}`,
@@ -90,11 +90,6 @@ export default function Home() {
         });
       } else {
         setExecutionStatus(WorkflowExecutionStatus.ERROR);
-        
-        // Add error logs
-        if (result.logs && Array.isArray(result.logs)) {
-          result.logs.forEach((log: ExecutionLog) => addLog(log));
-        }
 
         addLog({
           id: `error-${Date.now()}`,
@@ -163,7 +158,7 @@ export default function Home() {
 
         <div className="flex-1 flex overflow-hidden">
           <NodePalette />
-          
+
           <div className="flex-1 flex flex-col">
             <div className="flex-1 overflow-hidden">
               <WorkflowCanvas />

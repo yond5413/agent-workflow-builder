@@ -26,21 +26,21 @@ interface WorkflowStore {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   onConnect: (connection: Connection) => void;
-  
+
   addNode: (type: NodeType, position: { x: number; y: number }) => void;
   updateNodeData: (nodeId: string, data: any) => void;
   deleteNode: (nodeId: string) => void;
-  
+
   selectNode: (nodeId: string | null) => void;
-  
+
   setExecutionStatus: (status: WorkflowExecutionStatus) => void;
   setNodeExecutionState: (nodeId: string, state: NodeExecutionState) => void;
   addLog: (log: ExecutionLog) => void;
   clearLogs: () => void;
-  
+
   clearWorkflow: () => void;
   loadWorkflow: (nodes: Node[], edges: Edge[]) => void;
-  
+
   resetExecutionState: () => void;
 }
 
@@ -65,7 +65,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
   // Actions
   setNodes: (nodes) => set({ nodes }),
-  
+
   setEdges: (edges) => set({ edges }),
 
   onNodesChange: (changes) => {
@@ -88,12 +88,12 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
   addNode: (type, position) => {
     const id = generateNodeId(type);
-    
+
     const defaultData: Record<NodeType, any> = {
       [NodeType.INPUT]: { label: "Input", payload: "" },
-      [NodeType.LLM_TASK]: { label: "LLM Task", prompt: "", model: "z-ai/glm-4.5-air:free", temperature: 0.7, max_tokens: 1000 },
+      [NodeType.LLM_TASK]: { label: "LLM Task", prompt: "", model: "xiaomi/mimo-v2-flash:free", temperature: 0.7, max_tokens: 1000 },
       [NodeType.WEB_SCRAPER]: { label: "Web Scraper", url: "", max_length: 5000 },
-      [NodeType.STRUCTURED_OUTPUT]: { label: "Structured Output", schema: "{}", model: "z-ai/glm-4.5-air:free" },
+      [NodeType.STRUCTURED_OUTPUT]: { label: "Structured Output", schema: "{}", model: "xiaomi/mimo-v2-flash:free" },
       [NodeType.EMBEDDING_GENERATOR]: { label: "Embedding Generator", model: "embed-english-v3.0", inputType: "search_document" },
       [NodeType.VECTOR_STORE]: { label: "Vector Store", collectionName: "", vectorSize: 1024 },
       [NodeType.SIMILARITY_SEARCH]: { label: "Similarity Search", collectionName: "", topK: 5, scoreThreshold: 0.7 },
@@ -195,7 +195,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       nodeExecutionStates: new Map(),
       logs: [],
     });
-    
+
     // Clear output from all nodes
     set({
       nodes: get().nodes.map((node) => ({
