@@ -198,11 +198,6 @@ agent-workflow-builder/
 │   │   └── workflowStore.ts            # Zustand store
 │   └── types/
 │       └── workflow.ts                 # TypeScript types
-├── fastapi-backend/
-│   ├── main.py                         # FastAPI application
-│   ├── requirements.txt                # Python dependencies
-│   └── README.md                       # Backend docs
-└── PRD.md                              # Product Requirements Document
 ```
 
 ## 🔧 Environment Variables
